@@ -1,0 +1,21 @@
+.gridContainer {
+    display: grid; 
+    grid-template-columns: 1fr 3fr; 
+    grid-template-rows: 1fr; 
+    gap: 0px 30px; 
+    grid-template-areas: 
+      "Selector SelectionConfiguration"
+  }
+
+.Selector { 
+    grid-area: Selector;
+}
+
+.SelectionConfiguration {
+    grid-area: SelectionConfiguration;
+}
+
+.Selector a,button {
+    margin-bottom: .5em;
+    width: 100%;
+}

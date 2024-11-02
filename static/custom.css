@@ -1,0 +1,74 @@
+.mainheader {
+    background-color: var(--pico-primary-background);
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.mainheading {
+    margin-top: -10px;
+    margin-bottom: -5px;
+    margin-right: .5em;
+}
+
+.voteCard {
+    background-color: transparent;
+    border: 1px solid var(--pico-primary);
+    border-radius: .25em;
+    margin-bottom: .5em;
+}
+
+.voteCardTitle {
+    color: var(--pico-primary);
+    padding: 1em;
+    cursor: pointer;
+}
+
+.voteStats{
+    text-align: center;
+    margin-bottom: 0px;
+}
+
+.voteStats div:first-child {
+    font-size: .67em;
+    font-weight: bold;
+}
+
+.voteCardSuccess {
+    border-color: green;
+}
+
+.voteCardSuccess .voteCardTitle {
+    color: green;
+}
+
+.voteCardSuccess .voteCardContent form {
+    height: 0;
+}
+
+form {
+    transition: height 10s ease-out;
+    overflow: hidden;
+    height: auto;
+    margin-top: 1em;
+}
+
+div.voteCardContent {
+    padding: 1em;
+    display: block;
+}
+
+div.voteCardContent.hiddenContent {
+    display: none
+}
+
+fieldset.voteOptions {
+    margin-left: 1em;
+}
+
+input[type=button]{
+    margin-bottom: 0em;
+}
+
+dialog button {
+    width: 100%;
+}

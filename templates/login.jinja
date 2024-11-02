@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="{{ url_for('static', path='/pico.violet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/custom.css') }}">
+    <title>Votix</title>
+</head>
+
+<body>
+    <header class="mainheader">
+        <nav class="container-fluid">
+            <ul>
+                <li>
+                    <h2 class="mainheading">VotiX</h2>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <main class="container">
+        <article>
+            <header>Anmeldung</header>
+            <form action="{{ url_for('login') }}" method="post">
+                <fieldset>
+                    <label>
+                        Benutzername
+                        <input name="username" placeholder="Benutzername" autocomplete="given-name" />
+                    </label>
+                    <label>
+                        Passwort
+                        <input type="password" name="password" placeholder="Passwort" autocomplete="email" />
+                    </label>
+                </fieldset>
+
+                <input type="submit" value="Anmelden" />
+            </form>
+        </article>
+    </main>
+</body>
+
+</html>

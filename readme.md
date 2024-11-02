@@ -1,5 +1,7 @@
 # Votick
 
+Written with Python Verions 3.12
+
 Start Service
 ```
 fastapi dev main.py

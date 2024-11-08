@@ -19,3 +19,4 @@ fastapi dev main.py
 - display vote results in admin interface?
 - delete votes/votegroups
 - dont allow changes as soon as ballot has been activated
+- Websocket via TLS (wss://) sicherstellen

@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
 })
 
 function openWebSocket() {
-    ws = new WebSocket("ws://localhost:8000/ws");
+    ws = new WebSocket("ws://localhost:8000/vote/ws");
     ws.onmessage = function (event) {
         const message = JSON.parse(event.data)
         console.log(message)
@@ -22,7 +22,7 @@ function openWebSocket() {
         }
 
         if (message.type == "AUTHENTICATED") {
-            sendMessage(`{"type": "GETBALLOTS", "data": "${accessCode}"}`)
+            sendMessage(`{"type": "GETBALLOTS"}`)
         }
 
         if (message.type == "VOTERESULT") {
@@ -38,7 +38,6 @@ function openWebSocket() {
         }
     };
 
-    ws.onopen = () => sendMessage(`{"type": "AUTHENTICATE", "data": "${accessCode}"}`)
 }
 
 function closeModal() {
@@ -74,7 +73,6 @@ function vote(content) {
     sendMessage(JSON.stringify({
         type: 'VOTE', 
         data: {
-            accessCode,
             ballotId: +content.querySelector(".formVoteId").value,
             votes: [+content.querySelector(".voteOptions input[type=radio]:checked").value]
         }
@@ -91,6 +89,10 @@ function toggleCard(voteCardId) {
     }
 }
 
+function fetchBallotToken(ballotId){
+    return "TOKEN"
+}
+
 function updateBallots(ballotUpdate) {
     const ballotList = document.getElementById("voteList")
     for (const ballot of ballotUpdate) {
@@ -102,16 +104,16 @@ function updateBallots(ballotUpdate) {
                 ballot.minimumVotes,
                 ballot.maximumVotes,
                 ballot.voteStacking,
-                ballot.alreadyVoted ? "Gewählt" : "Wahl ausstehend")
+                ballot.voted ? "Gewählt" : "Wahl ausstehend")
             
             ballots[ballot.id] = ballotItem.children[0].id
             ballotList.appendChild(ballotItem)
         }
 
-        ballotCard = document.getElementById(ballots[ballot.id])
-        if (ballot.alreadyVoted != ballotCard.classList.contains("voteCardSuccess")) {
+        const ballotCard = document.getElementById(ballots[ballot.id])
+        if (ballot.voted != ballotCard.classList.contains("voteCardSuccess")) {
             ballotCard.classList.toggle("voteCardSuccess")
-            ballotCard.querySelector(".voteState").textContent = ballot.alreadyVoted ? "Gewählt" : "Wahl ausstehend"
+            ballotCard.querySelector(".voteState").textContent = ballot.voted ? "Gewählt" : "Wahl ausstehend"
         }
     }
 
@@ -133,14 +135,14 @@ function getVoteCard(voteId, voteTitle, voteOptions, minVotes, maxVotes, accumul
     clone.querySelector(".voteState").textContent = state
     clone.querySelector(".formVoteId").value = voteId
 
-    for (let i = 0; i < voteOptions.length; i++) {
+    for (const option of voteOptions) {
         const voteOption = document.createElement("label")
         const input = document.createElement("input")
         input.type = "radio"
         input.name = "vc" + vcCounter
-        input.value = voteOptions[i].optionId
+        input.value = option.optionId
         voteOption.appendChild(input)
-        voteOption.appendChild(document.createTextNode(voteOptions[i].optionTitle))
+        voteOption.appendChild(document.createTextNode(option.optionTitle))
 
         clone.querySelector(".voteOptions").appendChild(voteOption)
     }

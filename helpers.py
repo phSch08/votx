@@ -1,49 +1,67 @@
-from .dbModels import AccessCode, Ballot, Vote
-from .Models import BallotData
-from peewee import DoesNotExist, Case, fn
+import json
+from .dbModels import BallotVoteGroup, RegistrationToken, Ballot, UserVote, VoteGroup, VoteGroupMembership, VoteOption, VoterToken
+from .Models import BallotData, VoteOptionData
 from .socketManager import SocketManager
+from peewee import JOIN, Case
 
 socketManager = SocketManager()
 
-def get_user_ballots(access_code: str):
-    subquery = (
-        Vote
-        .select(fn.COUNT(Vote.id))
-        .join(AccessCode)
-        .where((Vote.ballot == Ballot.id) & (AccessCode.code == access_code))
-    )
-   
-    query = (
-        Ballot
+def get_user_ballots(voterToken: str) -> list:
+    query = (Ballot 
         .select(
             Ballot,
+            VoteOption,
             Case(
                 None,
-                (
-                    (subquery > 0, True),
-                ),
-                False
-            ).alias('has_voted')
-        ).where(Ballot.active)
-    )
-   
-    return query
+                [(UserVote.id.is_null(), False)],
+                True
+            ).alias("has_user_vote")
+        )
+        .where(Ballot.active == True)
+        .join(BallotVoteGroup)
+        .join(VoteGroup)
+        .join(VoteGroupMembership)
+        .join(RegistrationToken)
+        .join(VoterToken)
+        .join(UserVote, on=((RegistrationToken.id == UserVote.voter) & (Ballot.id == UserVote.ballot)), join_type=JOIN.LEFT_OUTER)
+        .join_from(Ballot, VoteOption)
+        .where(VoterToken.token == voterToken))
+            
+    ballots = {}
+    for row in query:
+        if row.id not in ballots:
+            ballots[row.id] = {
+                "ballot": row,
+                "voted": row.has_user_vote,
+                "options": []
+            }
+        ballots[row.id]["options"].append(row.voteoption)
+        
+    return list(map(toDictBallotData, ballots.values()))
 
 async def broadcast_user_ballots():
-    await socketManager.broadcast_func(lambda access_code: {
+    await socketManager.broadcast_func(lambda voter_token: {
         'type': 'BALLOTS', 
-        'data': list(map(toDictBallotData, get_user_ballots(access_code)))})
+        'data': get_user_ballots(voter_token)
+    })
 
 def toPydanticBallotData(ballot: Ballot):
     return BallotData(
-        id=ballot.id,
-        title=ballot.title,
-        maximumVotes=ballot.maximumVotes,
-        voteStacking=ballot.voteStacking,
-        voteOptions=[voteOption.title for voteOption in ballot.voteOptions],
-        active=ballot.active,
-        alreadyVoted=ballot.has_voted
-        )
+        id=ballot["ballot"].id,
+        title=ballot["ballot"].title,
+        maximumVotes=ballot["ballot"].maximumVotes,
+        voteStacking=ballot["ballot"].voteStacking,
+        voteOptions=[VoteOptionData(optionId=voteOption.id, optionTitle=voteOption.title) for voteOption in ballot["options"]],
+        active=ballot["ballot"].active,
+        voted=ballot["voted"]
+    )
 
 def toDictBallotData(ballot: Ballot):
     return toPydanticBallotData(ballot).model_dump()
+
+async def updateBeamerVoteCount(ballot: Ballot):
+    await socketManager.broadcast_beamer(json.dumps({
+        'type': 'SETVOTECOUNT',
+        'data': len(ballot.votes)
+    }))
+    

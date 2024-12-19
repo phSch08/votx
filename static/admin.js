@@ -1,7 +1,7 @@
 
-function generateAccessCodes() {
+function generateRegistrationTokens() {
     const newCodes = +document.getElementById("accessCodeAddCount").value
-    fetch("/accessCodes/", {
+    fetch("registrationTokens/", {
         method: "POST",
         body: JSON.stringify({
             amount: newCodes
@@ -22,6 +22,19 @@ function activateBallot(ballotId) {
 
 function deactivateBallot(ballotId) {
     fetch(`ballot/${ballotId}/deactivate`, {
+        method: "POST",
+    }).then((res) => { location.reload() }
+    )
+}
+
+function focusBallot(ballotId) {
+    fetch(`ballot/${ballotId}/focus`, {
+        method: "POST",
+    })
+}
+
+function showBallotResult(ballotId) {
+    fetch(`ballot/${ballotId}/result`, {
         method: "POST",
     }).then((res) => { location.reload() }
     )

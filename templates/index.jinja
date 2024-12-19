@@ -5,12 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark" />
-    <link rel="stylesheet" href="static/pico.violet.css">
-    <link rel="stylesheet" href="static/custom.css">
-    <script type="text/javascript" src="static/custom.js" defer></script>
-    <script>
-        const accessCode = "{{ accessCode }}"
-    </script>
+    <link rel="stylesheet" href="{{ url_for('static', path='/pico.violet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/custom.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', path='/inputmask.js') }}" defer></script>
     <title>Votix</title>
 </head>
 
@@ -22,72 +19,22 @@
             </ul>
         </nav>
     </header>
-    <main id="voteList" class="container">
+    <main class="container">
 
-        <h2>Wahlgänge</h2>
+        <form action="{{ url_for('register_voter') }}" method="post">
+            <article>
+                <header>Registrierungstoken Eingeben</header>
 
+                <input name="registrationToken" placeholder="XXXXX - XXXXX - XXXXX" data-slots="X"
+                    autocomplete="given-name" style="text-align:center; font-family: monospace;" inputmode="numeric"/>
+                <p>Durch ausführen der Anmeldung wird das Registrierungstoken ungültig. Die Teilnahme an der Wahl
+                    ist anschließend nur in diesem Browser möglich!</p>
 
-        <template id="voteCardTemplate">
-            <div id="voteCardTemplateDiv" class="voteCard">
-                <div class="voteCardTitle" onclick="toggleCard(this.parentElement.id)">-
-                </div>
-                <div class="voteCardContent hiddenContent">
-                    <div class="grid">
-                        <div>
-                            <article class="voteStats">
-                                <div>Anzahl Stimmen</div>
-                                <div class="voteCount">-</div>
-                            </article>
-                        </div>
-                        <div>
-                            <article class="voteStats">
-                                <div>Stimmhäufung</div>
-                                <div class="voteAccumulation">-</div>
-                            </article>
-                        </div>
+                <input type="submit" value="Anmelden" />
+            </article>
 
-                        <div>
-                            <article class="voteStats">
-                                <div>Status</div>
-                                <div class="voteState">-</div>
-                            </article>
-                        </div>
-                    </div>
-                    <form onsubmit="vote(this); return false">
-                        <input type="hidden" class="formVoteId">
-                        <fieldset class="voteOptions">
-
-                        </fieldset>
-                        <input type="submit" value="Wählen" class="submitButton">
-                    </form>
-                </div>
-            </div>
-        </template>
-
-        <template id="voteOptionTemplate">
-            <label id="voteOptionTemplateLabel">
-                <input type="radio" name="vote1" />
-                -
-            </label>
-        </template>
+        </form>
     </main>
-    <dialog id="voteDialog">
-        <article>
-        <header><strong>Wahl abgesendet</strong></header>
-        <div id="voteInProgress">
-            <p>Warte auf Bestätigung durch Server...</p>
-            <progress/>
-        </div>
-        <div id="voteFailed" hidden>
-            <p>Wahl fehlgeschlagen, bitte erneut probieren!</p>
-            <button onclick="closeModal()">Schließen</button>
-        </div>
-        <div id="voteSuccessfull" hidden>
-            <p>Wahlvorgang Erfolgreich!</p>
-            <button onclick="closeModal()">Schließen</button>
-        </div>
-    </article>
-    </dialog>
 </body>
 
 </html>

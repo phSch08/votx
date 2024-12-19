@@ -1,13 +1,17 @@
+import datetime
+import json
+import secrets
+import string
 from typing import Annotated
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from ..Models import BallotData
+from ..Models import BallotData, RegistrationTokenCreationData
 
-from ..helpers import broadcast_user_ballots
+from ..helpers import broadcast_user_ballots, socketManager
 
-from ..dbModels import AccessCode, Ballot, VoteOption
+from ..dbModels import RegistrationToken, Ballot, VoteOption, db
 
 from ..security import get_logged_in_user
 
@@ -30,7 +34,7 @@ def get_admin(request: Request, response: Response, user_name: Annotated[str, De
         context={
             "user_name": user_name,
             "ballots": Ballot.select(),
-            "access_code_count": AccessCode.select().count(),
+            "access_code_count": RegistrationToken.select().count(),
             "selected_ballot": selected_ballot
             })
 
@@ -41,14 +45,51 @@ async def activateBallot(id: int) -> None:
     ballot.save()
     await broadcast_user_ballots()
 
-    
-    
 @router.post("/ballot/{id}/deactivate") 
 async def deactivateBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     ballot.active = False
     ballot.save()
     await broadcast_user_ballots()
+    
+@router.post("/ballot/{id}/focus") 
+async def focusBallot(id: int) -> None:
+    ballot = Ballot.get_by_id(id)
+    await socketManager.broadcast_beamer(
+        json.dumps({
+            "type": "SETVOTE",
+            "data": {
+                "voteTitle": ballot.title,
+                "voteCount": len(ballot.votes),
+                "voteOptions": [vo.title for vo in ballot.voteOptions]
+            }
+        })
+    )
+    
+@router.post("/ballot/{id}/result") 
+async def showResult(id: int) -> None:
+    ballot = Ballot.get_by_id(id)
+    await socketManager.broadcast_beamer(
+        json.dumps({
+            "type": "SETVOTE",
+            "data": {
+                "voteTitle": ballot.title,
+                "voteCount": len(ballot.votes),
+                "voteOptions": [vo.title for vo in ballot.voteOptions]
+            }
+        })
+    )
+
+@router.post("/registrationTokens/")
+def generateRegistrationTokens(accessCodeCreationData: RegistrationTokenCreationData):
+    new_tokens = []
+    for i in range(accessCodeCreationData.amount):
+        secret = ''.join(secrets.choice(string.digits) for i in range(15))
+        splitted_secret = ' - '.join([secret[i: i+5] for i in range(3)])
+        new_tokens.append({'token': splitted_secret, 'issueDate': datetime.datetime.now()})
+
+    with db.atomic():
+        RegistrationToken.insert_many(new_tokens).execute()
 
 @router.post("/ballot/")
 async def createBallot(ballotData: BallotData) -> int:

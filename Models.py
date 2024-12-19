@@ -1,7 +1,11 @@
 from pydantic import BaseModel
 
-class AccessCodeCreationData(BaseModel):
+class RegistrationTokenCreationData(BaseModel):
     amount: int
+
+class VoteOptionData(BaseModel):
+    optionId: int
+    optionTitle: str
 
 class BallotData(BaseModel):
     id: None | int = None
@@ -9,15 +13,14 @@ class BallotData(BaseModel):
     maximumVotes: int = 1
     minimumVotes: int = 1
     voteStacking: bool
-    voteOptions: list[str]
+    voteOptions: list[VoteOptionData]
     active: bool
-    alreadyVoted: None | bool = None
+    voted: bool
 
 class VoteData(BaseModel):
-    accessCode: str
     ballotId: int
     votes: list[int]
 
-class Token(BaseModel):
+class TokenData(BaseModel):
     access_token: str
     token_type: str

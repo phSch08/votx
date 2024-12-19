@@ -1,14 +1,17 @@
-from peewee import SqliteDatabase, Model, IntegerField, CompositeKey, CharField, DateTimeField, ForeignKeyField, BooleanField
+from peewee import PostgresqlDatabase, SqliteDatabase, Model, IntegerField, CompositeKey, CharField, DateTimeField, ForeignKeyField, BooleanField
 
-db = SqliteDatabase(None)
+#db = SqliteDatabase(None)
+db = PostgresqlDatabase(
+    'votix', 
+    user='votix', 
+    password='mysecretpassword', 
+    host='localhost', 
+    port=5432
+)
 
 class BaseModel(Model):
     class Meta:
         database = db
-
-class AccessCode(BaseModel):
-    code = CharField()
-    issueDate = DateTimeField()
 
 class Ballot(BaseModel):
     title = CharField()
@@ -17,15 +20,34 @@ class Ballot(BaseModel):
     voteStacking = BooleanField(default=False)
     active= BooleanField(default=False)
 
+class RegistrationToken(BaseModel):
+    token = CharField()
+    issueDate = DateTimeField()
+    
+class VoterToken(BaseModel):
+    token = CharField()
+    registrationToken = ForeignKeyField(RegistrationToken, backref='voterToken')
+    
+class VoteGroup(BaseModel):
+    title = CharField()
+    
+class BallotVoteGroup(BaseModel):
+    ballot = ForeignKeyField(Ballot, backref='votegroups')
+    votegroupe = ForeignKeyField(VoteGroup, backref='ballots')
+    
+class VoteGroupMembership(BaseModel):
+    voteGroup = ForeignKeyField(VoteGroup, backref="memberships")
+    registrationToken = ForeignKeyField(RegistrationToken, backref="memberships")
+
 class VoteOption(BaseModel):
     title = CharField()
-    voteCount = IntegerField(default=0)
     ballot = ForeignKeyField(Ballot, backref='voteOptions')
     optionIndex = IntegerField()
 
-    class Meta:
-        primary_key = CompositeKey('ballot', 'optionIndex')
+class UserVote(BaseModel):
+    voter = ForeignKeyField(RegistrationToken, backref='votes')
+    ballot = ForeignKeyField(Ballot, backref='votes')
 
 class Vote(BaseModel):
-    voter = ForeignKeyField(AccessCode, backref='votes')
-    ballot = ForeignKeyField(Ballot, backref='votes')
+    vote_option = ForeignKeyField(VoteOption, backref='votes')
+    custom_id = CharField()

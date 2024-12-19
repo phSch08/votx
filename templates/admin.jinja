@@ -42,7 +42,8 @@
                 {% if selected_ballot %}
                 <div class="SelectionConfiguration">
                     <div class="grid">
-                        <button type="button" class="outline">Fokus</button>
+                        <button type="button" class="outline"
+                            onclick="focusBallot({{ selected_ballot.id }})">Fokus</button>
                         {% if selected_ballot.active %}
                         <button type="button" class="outline"
                             onclick="deactivateBallot({{ selected_ballot.id }})">Deaktivieren</button>
@@ -50,7 +51,8 @@
                         {% else %}
                         <button type="button" class="outline"
                             onclick="activateBallot({{ selected_ballot.id }})">Aktivieren</button>
-                        <button type="button" class="outline">Ergebnis</button>
+                        <button type="button" class="outline"
+                            onclick="showBallotResult({{ selected_ballot.id }})">Ergebnis</button>
                         {% endif %}
                     </div>
                     <hr>
@@ -127,7 +129,7 @@
                 </label>
                 <fieldset class="grid">
                     <button type="button" class="outline secondary">Alle Wahlscheine löschen</button>
-                    <button type="button" class="" onclick="generateAccessCodes()">Generieren</button>
+                    <button type="button" class="" onclick="generateRegistrationTokens()">Generieren</button>
                 </fieldset>
                 <fieldset class="grid">
                     <button type="button" class="outline secondary">Wahlscheine als PDF</button>

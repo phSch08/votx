@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="{{ url_for('static', path='/pico.violet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/custom.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/beamer.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', path='/beamer.js') }}" defer></script>
+    <title>Votix</title>
+</head>
+
+<body>
+    <main id="mainContainer" class="container">
+        <div class="gridContainer">
+            <div class="gridItem gridItem1">
+                <div>
+                    <h1 id="voteTitle">Wahl zum Vorsitz</h1>
+                    <p><span id="voteCount">0</span> Stimmen abgegeben...</p>
+                </div>
+                <div class="voteOptions">
+                    <ol id="voteOptions">
+                        <li>Holger Hodensack</li>
+                        <li>Ursula Unrat</li>
+                        <li>Haiko Haifisch</li>
+                        <li>Doris Dudelsack</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="gridItem gridItem2">
+                <ul class="barchart">
+                    <li class="name">
+                        Holger Hodensack
+                    </li>
+                    <li class="value" style="grid-column-end: span 10">
+                        <span>9</span>
+                    </li>
+                    <li class="name">
+                        Ursula Unrath
+                    </li>
+                    <li class="value" style="grid-column-end: span 18">
+                        <span>17</span>
+                    </li>
+                    <li class="name">
+                        Haiko Haifisch
+                    </li>
+                    <li class="value" style="grid-column-end: span 5">
+                        <span>4</span>
+                    </li>
+                    <li class="name">
+                        Doris Dudelsack
+                    </li>
+                    <li class="value" style="grid-column-end: span 11">
+                        <span>10</span>
+                    </li>
+                </ul>
+            </div>
+            <!--<div class="gridItem gridItem3">
+                Guck! Tabelle!
+            </div>-->
+        </div>
+    </main>
+</body>
+
+</html>

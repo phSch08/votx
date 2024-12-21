@@ -6,7 +6,7 @@ var message
 let ballots = {}
 
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     voteCards = document.getElementsByClassName("voteCard")
     openWebSocket()
 })
@@ -51,8 +51,8 @@ function closeModal() {
         document.getElementById("voteInProgress").hidden = false
         document.getElementById("voteSuccessfull").hidden = true
         document.getElementById("voteFailed").hidden = true
-      }, 400);
-    
+    }, 400);
+
 }
 
 function sendMessage(content) {
@@ -67,11 +67,11 @@ function vote(content) {
     html.classList.add("modal-is-open", "modal-is-opening");
     setTimeout(() => {
         html.classList.remove("modal-is-opening");
-      }, 400);
+    }, 400);
     modal.showModal()
 
     sendMessage(JSON.stringify({
-        type: 'VOTE', 
+        type: 'VOTE',
         data: {
             ballotId: +content.querySelector(".formVoteId").value,
             votes: [+content.querySelector(".voteOptions input[type=radio]:checked").value]
@@ -89,7 +89,7 @@ function toggleCard(voteCardId) {
     }
 }
 
-function fetchBallotToken(ballotId){
+function fetchBallotToken(ballotId) {
     return "TOKEN"
 }
 
@@ -105,7 +105,7 @@ function updateBallots(ballotUpdate) {
                 ballot.maximumVotes,
                 ballot.voteStacking,
                 ballot.voted ? "Gewählt" : "Wahl ausstehend")
-            
+
             ballots[ballot.id] = ballotItem.children[0].id
             ballotList.appendChild(ballotItem)
         }
@@ -135,7 +135,7 @@ function getVoteCard(voteId, voteTitle, voteOptions, minVotes, maxVotes, accumul
     clone.querySelector(".voteState").textContent = state
     clone.querySelector(".formVoteId").value = voteId
 
-    for (const option of voteOptions) {
+    for (const option of voteOptions.sort((a, b) => { return a.optionIndex - b.optionIndex })) {
         const voteOption = document.createElement("label")
         const input = document.createElement("input")
         input.type = "radio"

@@ -4,13 +4,19 @@ function generateRegistrationTokens() {
     fetch("registrationTokens/", {
         method: "POST",
         body: JSON.stringify({
-            amount: newCodes
+            amount: newCodes,
+            voteGroups: [...document.getElementsByName("access_code_group_checkbox")].filter(cb => cb.checked).map(cb => cb.value),
         }),
         headers: {
             "Content-type": "application/json; charset=UTF-8"
         }
     }).then((res) => { location.reload() }
     )
+}
+
+function getTokenPDF() {
+    const pdfURL = new URL("registrationTokens", window.location.href)
+    window.open(pdfURL.href)
 }
 
 function activateBallot(ballotId) {
@@ -57,8 +63,9 @@ function createBallot() {
             title: "Neue Wahl",
             maximumVotes: 1,
             minimumVotes: 1,
-            voteStacking: true,
+            voteStacking: false,
             voteOptions: [],
+            voteGroups: [],
             active: false
         }),
         headers: {
@@ -78,8 +85,29 @@ function updateBallot() {
             minimumVotes: document.getElementsByName("ballot_min_votes")[0].value,
             voteStacking: document.getElementsByName("ballot_vote_stacking")[0].value == "true",
             voteOptions: [...document.getElementsByName("ballot_vote_option")].map(option => option.value),
+            voteGroups: [...document.getElementsByName("vote_group_checkbox")].filter(cb => cb.checked).map(cb => cb.value),
             active: false
         }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    }).then((res) => location.reload())
+}
+
+function createNewVoteGroup() {
+    fetch("votegroup/", {
+        method: "POST",
+        body: JSON.stringify({ title: document.getElementById("newVoteGroupTitleInput").value }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    }).then((res) => location.reload())
+}
+
+function deleteVoteGroup(id) {
+    fetch("votegroup/", {
+        method: "DELETE",
+        body: JSON.stringify({ id }),
         headers: {
             "Content-type": "application/json; charset=UTF-8"
         }

@@ -9,14 +9,14 @@
     <link rel="stylesheet" href="{{ url_for('static', path='/custom.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='/admin.css') }}">
     <script type="text/javascript" src="{{ url_for('static', path='/admin.js') }}" defer></script>
-    <title>Votix</title>
+    <title>VotX</title>
 </head>
 
 <body>
     <header class="mainheader">
         <nav class="container-fluid">
             <ul>
-                <h2 class="mainheading">VotiX</h2>
+                <h2 class="mainheading">VotX</h2>
                 Admin
             </ul>
             <ul>
@@ -106,7 +106,16 @@
                                 </select>
                             </label>
                         </fieldset>
-
+                        <fieldset>
+                            <legend>Berechtigte Wahlgruppen</legend>
+                            {% for vote_group in vote_groups %}
+                            <label class="cbLabel">
+                                <input type="checkbox" name="vote_group_checkbox" value="{{vote_group.id}}" {% if
+                                    selected_ballot.active %} disabled {% endif %}>
+                                {{ vote_group.title }}
+                            </label>
+                            {% endfor %}
+                        </fieldset>
                         <fieldset class="grid">
                             <button type="button" class="" onclick="updateBallot()" {% if selected_ballot.active %}
                                 disabled {% endif %}>Speichern</button>
@@ -115,6 +124,36 @@
                 </div>
                 {% endif %}
             </div>
+        </article>
+        <article>
+            <header>Wahlgruppen</header>
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Bezeichnung</th>
+                        <th scope="col"></th>
+                    </tr>
+
+                </thead>
+                <tbody>
+                    {% for vote_group in vote_groups %}
+                    <tr scope="row">
+                        <td>{{vote_group.id}}</td>
+                        <td>{{vote_group.title}}</td>
+                        <td><button class="outline" onclick="deleteVoteGroup({{vote_group.id}})">Löschen</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <h3>Neue Wahlgruppe erzeugen</h3>
+            <form>
+                <label>
+                    Bezeichnung
+                    <input type="text" id="newVoteGroupTitleInput">
+                </label>
+                <button type="button" class="" onclick="createNewVoteGroup()">Erzeugen</button>
+            </form>
         </article>
         <article>
             <header>Wahlscheine</header>
@@ -127,12 +166,18 @@
                     Zusätzlich generieren
                     <input type="number" id="accessCodeAddCount" value="1">
                 </label>
-                <fieldset class="grid">
-                    <button type="button" class="outline secondary">Alle Wahlscheine löschen</button>
-                    <button type="button" class="" onclick="generateRegistrationTokens()">Generieren</button>
+                <fieldset>
+                    <legend>Wahlgruppen</legend>
+                    {% for vote_group in vote_groups %}
+                    <label class="cbLabel">
+                        <input type="checkbox" name="access_code_group_checkbox" value="{{vote_group.id}}" />
+                        {{ vote_group.title }}
+                    </label>
+                    {% endfor %}
                 </fieldset>
                 <fieldset class="grid">
-                    <button type="button" class="outline secondary">Wahlscheine als PDF</button>
+                    <button type="button" class="outline secondary" onclick="getTokenPDF()">Wahlscheine als PDF</button>
+                    <button type="button" class="" onclick="generateRegistrationTokens()">Generieren</button>
                 </fieldset>
             </form>
         </article>

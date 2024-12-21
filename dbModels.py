@@ -33,10 +33,10 @@ class VoteGroup(BaseModel):
     
 class BallotVoteGroup(BaseModel):
     ballot = ForeignKeyField(Ballot, backref='votegroups')
-    votegroupe = ForeignKeyField(VoteGroup, backref='ballots')
+    votegroup = ForeignKeyField(VoteGroup, backref='ballots')
     
 class VoteGroupMembership(BaseModel):
-    voteGroup = ForeignKeyField(VoteGroup, backref="memberships")
+    voteGroup = ForeignKeyField(VoteGroup, backref="memberships", on_delete="CASCADE")
     registrationToken = ForeignKeyField(RegistrationToken, backref="memberships")
 
 class VoteOption(BaseModel):

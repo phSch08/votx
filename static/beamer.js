@@ -3,9 +3,9 @@ document.addEventListener("DOMContentLoaded", function () {
     openWebSocket()
 })
 
-function sleep(ms){
+function sleep(ms) {
     return new Promise(r => setTimeout(r, ms));
-} 
+}
 
 function openWebSocket() {
     var loc = window.location, ws_location;
@@ -36,7 +36,17 @@ function openWebSocket() {
         }
 
         if (message.type == "SETRESULT") {
-            
+            if (document.getElementById("voteTitle").textContent != message.data.voteTitle) {
+                document.getElementById("mainContainer").style.opacity = 0
+                await sleep(1000)
+                setVoteTitle(message.data.voteTitle)
+                setVoteOptions(message.data.voteOptions)
+                document.getElementById("mainContainer").style.opacity = 1
+            }
+            setVoteCount(message.data.voteCount)
+            setStatistics(message.data.voteOptions)
+            showStatistics()
+
         }
 
         if (message.type == "BLANK") {
@@ -46,12 +56,34 @@ function openWebSocket() {
 }
 
 function setVoteOptions(voteOptions) {
+    document.getElementById("voteOptionsElement").hidden = false
     const optionList = document.getElementById("voteOptions")
+    const optionGraph = document.getElementById("voteOptionsGraph")
     optionList.innerHTML = ''
     for (const voteOption of voteOptions) {
         const li = document.createElement('li');
-        li.innerText = voteOption
+        li.innerText = voteOption.title
         optionList.appendChild(li)
+    }
+}
+
+function setStatistics(voteOptions) {
+    const optionGraph = document.getElementById("voteOptionsGraph")
+    optionGraph.innerHTML = ''
+
+    for (const voteOption of voteOptions) {
+        const g_li_k = document.createElement('li')
+        g_li_k.innerText = voteOption.title
+        g_li_k.classList.add("name")
+        optionGraph.appendChild(g_li_k)
+
+        const g_li_v = document.createElement('li')
+        const value_span = document.createElement("span")
+        value_span.innerText = voteOption.votes
+        g_li_v.appendChild(value_span)
+        g_li_v.classList.add("value")
+        g_li_v.style = "grid-column-end: span " + (voteOption.votes +1)
+        optionGraph.appendChild(g_li_v)
     }
 }
 
@@ -60,6 +92,7 @@ function setVoteTitle(title) {
 }
 
 function setVoteCount(count) {
+    document.getElementById("voteCountElement").hidden = false
     document.getElementById("voteCount").textContent = count
 }
 
@@ -68,4 +101,11 @@ function hideStatistics() {
     document.querySelector(".gridContainer").classList.add("grid-hidecolumns")
     document.querySelector(".gridContainer").offsetHeight;
     document.querySelector(".gridContainer").classList.remove("notransition")
+}
+
+function showStatistics() {
+    //document.querySelector(".gridContainer").classList.add("notransition")
+    document.querySelector(".gridContainer").classList.remove("grid-hidecolumns")
+    document.querySelector(".gridContainer").offsetHeight;
+    //document.querySelector(".gridContainer").classList.remove("notransition")
 }

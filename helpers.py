@@ -17,6 +17,7 @@ def get_user_ballots(voterToken: str) -> list:
                 True
             ).alias("has_user_vote")
         )
+        .distinct()
         .where(Ballot.active == True)
         .join(BallotVoteGroup)
         .join(VoteGroup)
@@ -51,7 +52,7 @@ def toPydanticBallotData(ballot: Ballot):
         title=ballot["ballot"].title,
         maximumVotes=ballot["ballot"].maximumVotes,
         voteStacking=ballot["ballot"].voteStacking,
-        voteOptions=[VoteOptionData(optionId=voteOption.id, optionTitle=voteOption.title) for voteOption in ballot["options"]],
+        voteOptions=[VoteOptionData(optionId=voteOption.id, optionIndex=voteOption.optionIndex, optionTitle=voteOption.title) for voteOption in ballot["options"]],
         active=ballot["ballot"].active,
         voted=ballot["voted"]
     )

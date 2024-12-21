@@ -28,3 +28,7 @@ fastapi dev main.py
 - Check that all incoming and outgoing data is piped through pydantic
 - equal name scheme
 - order vote options by option index
+- disable dangerous functions in admin interface
+- Configure PDF in webinterface
+- Weblink on PDF
+- QR Code on PDF

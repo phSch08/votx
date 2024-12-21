@@ -4,14 +4,16 @@ import secrets
 import string
 from typing import Annotated
 from fastapi import APIRouter, Depends, Request, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
-from ..Models import BallotData, RegistrationTokenCreationData
+from ..pdfGenerator import PdfGenerator
+
+from ..Models import BallotData, BaseBallotData, RegistrationTokenCreationData, VoteGroupCreationData, VoteGroupDeletionData
 
 from ..helpers import broadcast_user_ballots, socketManager
 
-from ..dbModels import RegistrationToken, Ballot, VoteOption, db
+from ..dbModels import BallotVoteGroup, RegistrationToken, Ballot, VoteGroup, VoteGroupMembership, VoteOption, db
 
 from ..security import get_logged_in_user
 
@@ -24,6 +26,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 @router.post("/", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 def get_admin(request: Request, response: Response, user_name: Annotated[str, Depends(get_logged_in_user)], ballot: int | None = None) -> HTMLResponse:
@@ -35,8 +38,21 @@ def get_admin(request: Request, response: Response, user_name: Annotated[str, De
             "user_name": user_name,
             "ballots": Ballot.select(),
             "access_code_count": RegistrationToken.select().count(),
-            "selected_ballot": selected_ballot
-            })
+            "selected_ballot": selected_ballot,
+            "vote_groups": VoteGroup.select()
+        })
+
+
+@router.post("/votegroup")
+async def createVoteGroup(creationData: VoteGroupCreationData) -> None:
+    voteGroup = VoteGroup(title=creationData.title)
+    voteGroup.save()
+
+
+@router.delete("/votegroup")
+async def deleteVoteGroup(deletionData: VoteGroupDeletionData) -> None:
+    VoteGroup.delete_by_id(deletionData.id)
+
 
 @router.post("/ballot/{id}/activate")
 async def activateBallot(id: int) -> None:
@@ -45,14 +61,16 @@ async def activateBallot(id: int) -> None:
     ballot.save()
     await broadcast_user_ballots()
 
-@router.post("/ballot/{id}/deactivate") 
+
+@router.post("/ballot/{id}/deactivate")
 async def deactivateBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     ballot.active = False
     ballot.save()
     await broadcast_user_ballots()
-    
-@router.post("/ballot/{id}/focus") 
+
+
+@router.post("/ballot/{id}/focus")
 async def focusBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     await socketManager.broadcast_beamer(
@@ -61,40 +79,62 @@ async def focusBallot(id: int) -> None:
             "data": {
                 "voteTitle": ballot.title,
                 "voteCount": len(ballot.votes),
-                "voteOptions": [vo.title for vo in ballot.voteOptions]
+                "voteOptions": [{ "title": vo.title } for vo in ballot.voteOptions]
             }
         })
     )
-    
-@router.post("/ballot/{id}/result") 
+
+
+@router.post("/ballot/{id}/result")
 async def showResult(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     await socketManager.broadcast_beamer(
         json.dumps({
-            "type": "SETVOTE",
+            "type": "SETRESULT",
             "data": {
                 "voteTitle": ballot.title,
                 "voteCount": len(ballot.votes),
-                "voteOptions": [vo.title for vo in ballot.voteOptions]
+                "voteOptions": [ { "title": vo.title, "votes": len(vo.votes) } for vo in ballot.voteOptions]
             }
         })
     )
 
-@router.post("/registrationTokens/")
-def generateRegistrationTokens(accessCodeCreationData: RegistrationTokenCreationData):
-    new_tokens = []
-    for i in range(accessCodeCreationData.amount):
-        secret = ''.join(secrets.choice(string.digits) for i in range(15))
-        splitted_secret = ' - '.join([secret[i: i+5] for i in range(3)])
-        new_tokens.append({'token': splitted_secret, 'issueDate': datetime.datetime.now()})
 
+@router.get("/registrationTokens/")
+def getRegistrationTokens():
+    tokens = RegistrationToken.select()
+    generator = PdfGenerator(
+        "Wahlschein", "DLRG Vollversammlung", "15.03.2025", "Ihr Wahlcode")
+
+    pdf = generator.generateRegistrationPDF(
+        [(t.token, [membership.voteGroup.title for membership in t.memberships]) for t in tokens]
+    )
+
+    headers = {'Content-Disposition': 'inline; filename="registration_sheets.pdf"'}
+    return Response(bytes(pdf.output()), media_type='application/pdf', headers=headers)
+
+
+@router.post("/registrationTokens/")
+def generateRegistrationTokens(
+    accessCodeCreationData: RegistrationTokenCreationData
+):
     with db.atomic():
-        RegistrationToken.insert_many(new_tokens).execute()
+        for i in range(accessCodeCreationData.amount):
+            secret = ''.join(secrets.choice(string.digits) for i in range(15))
+            splitted_secret = ' - '.join([secret[i: i+5] for i in range(3)])
+            token = RegistrationToken(
+                token=splitted_secret, issueDate=datetime.datetime.now())
+            token.save()
+
+            VoteGroupMembership.insert_many(
+                [{'voteGroup': vg, 'registrationToken': token} for vg in accessCodeCreationData.voteGroups]).execute()
+
 
 @router.post("/ballot/")
-async def createBallot(ballotData: BallotData) -> int:
+async def createBallot(ballotData: BaseBallotData) -> int:
     if ballotData.id:
-        ballot, _ = Ballot.get_or_create(id=ballotData.id, defaults={"title": ballotData.title})
+        ballot, _ = Ballot.get_or_create(id=ballotData.id, defaults={
+                                         "title": ballotData.title})
     else:
         ballot = Ballot()
 
@@ -105,13 +145,23 @@ async def createBallot(ballotData: BallotData) -> int:
     ballot.active = ballotData.active
     ballot.save()
 
-    if (ballotData):
-        for vo_idx, vote_option in enumerate(ballotData.voteOptions):
-            option, _ = VoteOption.get_or_create(ballot=ballot.id, optionIndex=vo_idx, defaults={"title": ballotData.title})
+    for vo_idx, vote_option in enumerate(ballotData.voteOptions):
+        option, new_created = VoteOption.get_or_create(
+            ballot=ballot.id, optionIndex=vo_idx, defaults={"title": vote_option})
+        if not new_created:
             option.title = vote_option
-            option.save()
+        option.save()
 
-        VoteOption.delete().where((VoteOption.ballot == ballot.id) & (VoteOption.optionIndex >=  len(ballotData.voteOptions))).execute()
+    VoteOption.delete().where((VoteOption.ballot == ballot.id) & (
+        VoteOption.optionIndex >= len(ballotData.voteOptions))).execute()
+
+    print(ballotData.voteGroups)
+    BallotVoteGroup.delete().where((BallotVoteGroup.ballot == ballot) &
+                                   (BallotVoteGroup.votegroup.not_in(ballotData.voteGroups))).execute()
+
+    for vg in ballotData.voteGroups:
+        BallotVoteGroup.get_or_create(
+            ballot=ballot, votegroup=VoteGroup.get_by_id(vg))
 
     if (ballotData.active):
         await broadcast_user_ballots()

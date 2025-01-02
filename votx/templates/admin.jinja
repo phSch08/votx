@@ -110,8 +110,9 @@
                             <legend>Berechtigte Wahlgruppen</legend>
                             {% for vote_group in vote_groups %}
                             <label class="cbLabel">
-                                <input type="checkbox" name="vote_group_checkbox" value="{{vote_group.id}}" {% if
-                                    selected_ballot.active %} disabled {% endif %}>
+                                <input type="checkbox" name="vote_group_checkbox" value="{{vote_group.id}}"
+                                {% if selected_ballot.active %} disabled {% endif %} 
+                                {% if vote_group.is_selected %} checked {% endif %} >
                                 {{ vote_group.title }}
                             </label>
                             {% endfor %}

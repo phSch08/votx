@@ -30,19 +30,23 @@
             margin: 0;
             line-height: 1;
         }
-        
+
         div {
             margin-bottom: 2em;
             margin-top: 2em;
         }
-        
+
         .voteOptions {
             transition: opacity 500ms ease-in-out 0s, transform 2s ease-in-out 500ms, margin 2s ease-in-out 500ms;
             opacity: 0;
             margin-bottom: -8em;
             transform: scaleY(0);
             overflow: hidden;
-        }        
+
+            li {
+                list-style-type: none;
+            }
+        }
     }
 
     .gridItem2,
@@ -58,16 +62,16 @@
 .grid-hidecolumns {
     grid-template-columns: 100% 0%;
     transition: grid-template-columns 2s ease-in-out 0ms;
-    
+
     .gridItem1 .voteOptions {
-            transition: opacity 500ms ease-in-out 2s, transform 2s ease-in-out 0s, margin 2s ease-in-out 0s;
-            opacity: 1;
-            transform: scaleY(1);
-            margin-bottom: 2em;
-            margin-top: 2em;
-        }        
-    
-    
+        transition: opacity 500ms ease-in-out 2s, transform 2s ease-in-out 0s, margin 2s ease-in-out 0s;
+        opacity: 1;
+        transform: scaleY(1);
+        margin-bottom: 2em;
+        margin-top: 2em;
+    }
+
+
     .gridItem2,
     .gridItem3 {
         transition: opacity 500ms;
@@ -86,26 +90,26 @@
     padding: 1em;
     list-style-type: none;
     grid-auto-columns: 1fr;
-    
+
     li {
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0.25em 0.5em;
     }
-    
+
     li.name {
         grid-column-start: 1;
         grid-column-end: 1;
         padding-right: 1em;
     }
-    
+
     li.value {
         background: var(--pico-primary-focus);
-        
+
         grid-column-start: 2;
         border-radius: 3px 30px 30px 3px;
-        
+
         span {
             font-weight: bold;
             margin-left: auto;

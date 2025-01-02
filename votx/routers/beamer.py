@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 
 from ..helpers import socketManager
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="votx/templates")
 router = APIRouter(
     prefix="/beamer",
     tags=["beamer"],

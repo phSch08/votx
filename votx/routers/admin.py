@@ -1,7 +1,9 @@
 import datetime
 import json
+import os
 import secrets
 import string
+from peewee import Case, JOIN, fn
 from typing import Annotated
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -15,9 +17,9 @@ from ..helpers import broadcast_user_ballots, socketManager
 
 from ..dbModels import BallotVoteGroup, RegistrationToken, Ballot, VoteGroup, VoteGroupMembership, VoteOption, db
 
-from ..security import get_logged_in_user
+from ..security import create_access_token, get_logged_in_user
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="votx/templates")
 
 router = APIRouter(
     prefix="/admin",
@@ -31,7 +33,8 @@ router = APIRouter(
 @router.get("/", response_class=HTMLResponse)
 def get_admin(request: Request, response: Response, user_name: Annotated[str, Depends(get_logged_in_user)], ballot: int | None = None) -> HTMLResponse:
     selected_ballot = Ballot.get_or_none(Ballot.id == ballot)
-    return templates.TemplateResponse(
+
+    response = templates.TemplateResponse(
         request=request,
         name="admin.jinja",
         context={
@@ -39,8 +42,19 @@ def get_admin(request: Request, response: Response, user_name: Annotated[str, De
             "ballots": Ballot.select(),
             "access_code_count": RegistrationToken.select().count(),
             "selected_ballot": selected_ballot,
-            "vote_groups": VoteGroup.select()
+            "vote_groups": VoteGroup.select(VoteGroup, fn.EXISTS(BallotVoteGroup
+                                                                 .select()
+                                                                 .where((BallotVoteGroup.ballot == selected_ballot) & (BallotVoteGroup.votegroup == VoteGroup.id))).alias("is_selected"))
         })
+    expiry_time = int(os.environ.get('ADMIN_TOKEN_EXPIRY')
+                      ) if 'ADMIN_TOKEN_EXPIRY' in os.environ else 20
+    response.set_cookie(key="session_token",
+                        value=create_access_token(
+                            {"sub": user_name}, expiry_time),
+                        secure=True,
+                        httponly=True)
+    
+    return response
 
 
 @router.post("/votegroup")
@@ -54,7 +68,7 @@ async def deleteVoteGroup(deletionData: VoteGroupDeletionData) -> None:
     VoteGroup.delete_by_id(deletionData.id)
 
 
-@router.post("/ballot/{id}/activate")
+@ router.post("/ballot/{id}/activate")
 async def activateBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     ballot.active = True
@@ -62,7 +76,7 @@ async def activateBallot(id: int) -> None:
     await broadcast_user_ballots()
 
 
-@router.post("/ballot/{id}/deactivate")
+@ router.post("/ballot/{id}/deactivate")
 async def deactivateBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     ballot.active = False
@@ -70,7 +84,7 @@ async def deactivateBallot(id: int) -> None:
     await broadcast_user_ballots()
 
 
-@router.post("/ballot/{id}/focus")
+@ router.post("/ballot/{id}/focus")
 async def focusBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     await socketManager.broadcast_beamer(
@@ -79,13 +93,13 @@ async def focusBallot(id: int) -> None:
             "data": {
                 "voteTitle": ballot.title,
                 "voteCount": len(ballot.votes),
-                "voteOptions": [{ "title": vo.title } for vo in ballot.voteOptions]
+                "voteOptions": [{"title": vo.title} for vo in ballot.voteOptions]
             }
         })
     )
 
 
-@router.post("/ballot/{id}/result")
+@ router.post("/ballot/{id}/result")
 async def showResult(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     await socketManager.broadcast_beamer(
@@ -94,27 +108,28 @@ async def showResult(id: int) -> None:
             "data": {
                 "voteTitle": ballot.title,
                 "voteCount": len(ballot.votes),
-                "voteOptions": [ { "title": vo.title, "votes": len(vo.votes) } for vo in ballot.voteOptions]
+                "voteOptions": [{"title": vo.title, "votes": len(vo.votes)} for vo in ballot.voteOptions]
             }
         })
     )
 
 
-@router.get("/registrationTokens/")
+@ router.get("/registrationTokens/")
 def getRegistrationTokens():
     tokens = RegistrationToken.select()
     generator = PdfGenerator(
         "Wahlschein", "DLRG Vollversammlung", "15.03.2025", "Ihr Wahlcode")
 
     pdf = generator.generateRegistrationPDF(
-        [(t.token, [membership.voteGroup.title for membership in t.memberships]) for t in tokens]
+        [(t.token, [membership.voteGroup.title for membership in t.memberships])
+         for t in tokens]
     )
 
     headers = {'Content-Disposition': 'inline; filename="registration_sheets.pdf"'}
     return Response(bytes(pdf.output()), media_type='application/pdf', headers=headers)
 
 
-@router.post("/registrationTokens/")
+@ router.post("/registrationTokens/")
 def generateRegistrationTokens(
     accessCodeCreationData: RegistrationTokenCreationData
 ):
@@ -130,11 +145,11 @@ def generateRegistrationTokens(
                 [{'voteGroup': vg, 'registrationToken': token} for vg in accessCodeCreationData.voteGroups]).execute()
 
 
-@router.post("/ballot/")
+@ router.post("/ballot/")
 async def createBallot(ballotData: BaseBallotData) -> int:
     if ballotData.id:
         ballot, _ = Ballot.get_or_create(id=ballotData.id, defaults={
-                                         "title": ballotData.title})
+            "title": ballotData.title})
     else:
         ballot = Ballot()
 

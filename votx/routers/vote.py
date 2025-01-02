@@ -14,7 +14,7 @@ from ..dbModels import Ballot, UserVote, Vote, VoteOption, VoterToken, db
 from ..security import get_voter_token_from_jwt
 
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="votx/templates")
 
 router = APIRouter(
     prefix="/vote",

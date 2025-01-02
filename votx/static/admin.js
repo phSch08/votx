@@ -113,3 +113,13 @@ function deleteVoteGroup(id) {
         }
     }).then((res) => location.reload())
 }
+
+function textToBeamer() {
+    fetch("beamer/text", {
+        method: "POST",
+        body: JSON.stringify({ text: document.getElementById("beamer_text").value }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    })
+}

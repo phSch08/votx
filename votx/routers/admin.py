@@ -5,13 +5,13 @@ import secrets
 import string
 from peewee import Case, JOIN, fn
 from typing import Annotated
-from fastapi import APIRouter, Depends, Request, Response
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from ..pdfGenerator import PdfGenerator
 
-from ..Models import BallotData, BaseBallotData, RegistrationTokenCreationData, VoteGroupCreationData, VoteGroupDeletionData
+from ..Models import BallotData, BaseBallotData, BeamerTextData, RegistrationTokenCreationData, VoteGroupCreationData, VoteGroupDeletionData
 
 from ..helpers import broadcast_user_ballots, socketManager
 
@@ -57,6 +57,13 @@ def get_admin(request: Request, response: Response, user_name: Annotated[str, De
     return response
 
 
+@router.get("/logout")
+async def logout(response: Response):
+    response = RedirectResponse("/login", status_code=status.HTTP_302_FOUND)
+    response.delete_cookie(key="session_token")
+    return response
+
+
 @router.post("/votegroup")
 async def createVoteGroup(creationData: VoteGroupCreationData) -> None:
     voteGroup = VoteGroup(title=creationData.title)
@@ -68,7 +75,16 @@ async def deleteVoteGroup(deletionData: VoteGroupDeletionData) -> None:
     VoteGroup.delete_by_id(deletionData.id)
 
 
-@ router.post("/ballot/{id}/activate")
+@router.post("/beamer/text")
+async def beamerText(textData: BeamerTextData) -> None:
+    await socketManager.broadcast_beamer(
+        json.dumps({
+            "type": "SETTEXT",
+            "data": textData.text
+        })
+    )
+
+@router.post("/ballot/{id}/activate")
 async def activateBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     ballot.active = True
@@ -76,15 +92,15 @@ async def activateBallot(id: int) -> None:
     await broadcast_user_ballots()
 
 
-@ router.post("/ballot/{id}/deactivate")
+@router.post("/ballot/{id}/deactivate")
 async def deactivateBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     ballot.active = False
     ballot.save()
     await broadcast_user_ballots()
-
-
-@ router.post("/ballot/{id}/focus")
+    
+    
+@router.post("/ballot/{id}/focus")
 async def focusBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     await socketManager.broadcast_beamer(
@@ -99,7 +115,7 @@ async def focusBallot(id: int) -> None:
     )
 
 
-@ router.post("/ballot/{id}/result")
+@router.post("/ballot/{id}/result")
 async def showResult(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     await socketManager.broadcast_beamer(
@@ -114,7 +130,7 @@ async def showResult(id: int) -> None:
     )
 
 
-@ router.get("/registrationTokens/")
+@router.get("/registrationTokens/")
 def getRegistrationTokens():
     tokens = RegistrationToken.select()
     generator = PdfGenerator(

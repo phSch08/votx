@@ -39,7 +39,7 @@ function openWebSocket() {
             if (document.getElementById("voteTitle").textContent != message.data.voteTitle) {
                 document.getElementById("mainContainer").style.opacity = 0
                 await sleep(1000)
-                setVoteTitle(message.data.voteTitle)
+                setVoteTitle(message.data.voteTitle, false)
                 setVoteOptions(message.data.voteOptions)
                 document.getElementById("mainContainer").style.opacity = 1
             }
@@ -49,10 +49,25 @@ function openWebSocket() {
 
         }
 
-        if (message.type == "BLANK") {
-            document.getElementById("mainContainer").style.opacity = 0
+        if (message.type == "SETTEXT") {
+            await setText(message.data)
         }
     };
+}
+
+
+async function setText(text) {
+    if (text.toLowerCase() == "votx") {
+        if (document.getElementById("voteTitle").hidden) {
+            document.getElementById("mainContainer").style.opacity = 0
+            await sleep(1000)
+            document.getElementById("voteTitle").hidden = true
+            document.getElementById("votxLogo").hidden = false
+            document.getElementById("mainContainer").style.opacity = 1
+        }
+    } else {
+        await setVoteTitle(text)
+    }
 }
 
 function setVoteOptions(voteOptions) {
@@ -87,8 +102,23 @@ function setStatistics(voteOptions) {
     }
 }
 
-function setVoteTitle(title) {
-    document.getElementById("voteTitle").textContent = title
+async function setVoteTitle(title, animate = true) {
+    const element = document.getElementById("voteTitle")
+    element.textContent = title
+    if (element.hidden) {
+        if (animate){
+            document.getElementById("mainContainer").style.opacity = 0
+            await sleep(1000)
+        }
+        
+        element.hidden = false
+        document.getElementById("votxLogo").hidden = true
+
+        if (animate) {
+            document.getElementById("mainContainer").style.opacity = 1
+        }
+    }
+
 }
 
 function setVoteCount(count) {

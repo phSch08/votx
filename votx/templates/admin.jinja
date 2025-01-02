@@ -16,15 +16,30 @@
     <header class="mainheader">
         <nav class="container-fluid">
             <ul>
-                <h2 class="mainheading">VotX</h2>
+                <img class="mainheading" src="{{ url_for('static', path='/logo.svg') }}">
                 Admin
             </ul>
             <ul>
-                User: {{ user_name }}
+                {{ user_name }}
+            </ul>
+            <ul>
+                <a href="./logout/">Logout</a>
             </ul>
         </nav>
     </header>
     <main id="voteList" class="container">
+        <article>
+            <header>Regie</header>
+            <div class="grid">
+                <button onclick="textToBeamer()">Text</button>
+                <button {% if selected_ballot %} onclick="focusBallot({{ selected_ballot.id }})" {% else %} disabled {% endif %}>Fokus</button>
+                <button {% if (not selected_ballot) or selected_ballot.active %} disabled {% else %} onclick="showBallotResult({{ selected_ballot.id }})" {% endif %}>Ergebnis</button>
+            </div>
+            <label>
+                Anzuzeigender Text
+                <input type="text" name="beamer_text" id="beamer_text" placeholder="VotX" value="VotX">
+            </label>
+        </article>
 
         <article>
             <header>Wahlen</header>
@@ -42,19 +57,31 @@
                 {% if selected_ballot %}
                 <div class="SelectionConfiguration">
                     <div class="grid">
-                        <button type="button" class="outline"
-                            onclick="focusBallot({{ selected_ballot.id }})">Fokus</button>
                         {% if selected_ballot.active %}
                         <button type="button" class="outline"
                             onclick="deactivateBallot({{ selected_ballot.id }})">Deaktivieren</button>
-                        <button type="button" class="outline" disabled>Ergebnis</button>
                         {% else %}
                         <button type="button" class="outline"
                             onclick="activateBallot({{ selected_ballot.id }})">Aktivieren</button>
-                        <button type="button" class="outline"
-                            onclick="showBallotResult({{ selected_ballot.id }})">Ergebnis</button>
                         {% endif %}
                     </div>
+                    {% if not selected_ballot.active %}
+                    <hr>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Antwort</th>
+                                <th scope="col">Stimmen</th>
+                            </tr>
+                        </thead>
+                        {% for voteOption in selected_ballot.voteOptions%}
+                            <tr>
+                                <td>{{voteOption.title}}</td>
+                                <td>{{voteOption.votes|length}}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                    </table>
                     <hr>
                     <form id="ballot_edit_form">
                         <input type="hidden" name="ballot_id" value="{{selected_ballot.id}}" />
@@ -110,9 +137,9 @@
                             <legend>Berechtigte Wahlgruppen</legend>
                             {% for vote_group in vote_groups %}
                             <label class="cbLabel">
-                                <input type="checkbox" name="vote_group_checkbox" value="{{vote_group.id}}"
-                                {% if selected_ballot.active %} disabled {% endif %} 
-                                {% if vote_group.is_selected %} checked {% endif %} >
+                                <input type="checkbox" name="vote_group_checkbox" value="{{vote_group.id}}" {% if
+                                    selected_ballot.active %} disabled {% endif %} {% if vote_group.is_selected %}
+                                    checked {% endif %}>
                                 {{ vote_group.title }}
                             </label>
                             {% endfor %}
@@ -135,7 +162,6 @@
                         <th scope="col">Bezeichnung</th>
                         <th scope="col"></th>
                     </tr>
-
                 </thead>
                 <tbody>
                     {% for vote_group in vote_groups %}

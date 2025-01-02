@@ -50,3 +50,7 @@ class VoteGroupCreationData(BaseModel):
 
 class VoteGroupDeletionData(BaseModel):
     id: int
+    
+
+class BeamerTextData(BaseModel):
+    text: str

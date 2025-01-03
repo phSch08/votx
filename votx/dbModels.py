@@ -1,13 +1,14 @@
 import datetime
+import os
 from peewee import PostgresqlDatabase, TextField, Model, IntegerField, CompositeKey, CharField, DateTimeField, ForeignKeyField, BooleanField
 
 # db = SqliteDatabase(None)
 db = PostgresqlDatabase(
-    'votix',
-    user='votix',
-    password='mysecretpassword',
-    host='localhost',
-    port=5432
+    os.environ.get('POSTGRES_DB'),
+    user=os.environ.get('POSTGRES_USER'),
+    password=os.environ.get('POSTGRES_PASSWORD'),
+    host=os.environ.get('DB_HOST'),
+    port=os.environ.get('DB_PORT')
 )
 
 

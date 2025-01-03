@@ -30,7 +30,7 @@ logger.setLevel(logging.DEBUG)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db.init("votix")
+    db.init(os.environ.get('POSTGRES_DB'))
     db.connect()
     db.create_tables([
         RegistrationToken,

@@ -2,8 +2,7 @@ from datetime import datetime, timedelta, timezone
 import os
 from typing import Annotated
 
-from fastapi import Cookie, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Cookie
 
 from hashlib import pbkdf2_hmac
 
@@ -12,9 +11,8 @@ import jwt
 from .exceptions.AdminUnauthorizedException import AdminUnauthorizedException
 from .exceptions.VoterUnauthorizedException import VoterUnauthorizedException
 
-SECRET_KEY = "e2e103d93c55748c3acc2c25ed1d1d5ac8e667f05d56e1785833fdf43027b950"
-ALGORITHM = "HS256"
-
+SECRET_KEY = os.environ.get('SECRET_KEY')
+ALGORITHM = os.environ.get('ALGORITHM')
 
 def get_voter_token_from_jwt(voter_token: Annotated[str | None, Cookie()] = None) -> str:
     try:

@@ -146,13 +146,13 @@ def getBallotProtocol(id: int):
     ballot = Ballot.get_by_id(id)
     voteOptions = ballot.voteOptions
     votes = [vote for vo in voteOptions for vote in vo.votes]
-    
+
     pdf = generateBallotProtocol(
         ballot.title,
         [(vo.title, len(vo.votes)) for vo in voteOptions],
         [(ev.timestamp, ev.message) for ev in ballot.protocol],
         sorted([(v.vote_option.title, v.custom_id) for v in votes], key=lambda el: el[1].lower()))
-    
+
     headers = {'Content-Disposition': 'inline; filename="registration_sheets.pdf"'}
     return Response(bytes(pdf.output()), media_type='application/pdf', headers=headers)
 

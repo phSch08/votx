@@ -1,14 +1,36 @@
 services:
-  postgres:
+  votx_db:
     image: postgres
-    container_name: votix_db
+    container_name: votx_db
     ports:
       - 127.0.0.1:5432:5432
-    environment:
-      - POSTGRES_PASSWORD=mysecretpassword
-      - POSTGRES_USER=votix
-      - POSTGRES_DB=votix
+    env_file:
+      - path: "./db.env"
+        required: true
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
 
+  votx:
+    container_name: votx
+    build: .
+    ports:
+      - 127.0.0.1:8008:8008
+    env_file:
+      - path: "./db.env"
+        required: true
+      - path: "./.env"
+        required: true
+    restart: always
+    depends_on:
+      votx_db:
+        condition: service_healthy
+        restart: true
+        
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -17,3 +39,4 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: user-name@domain-name.com
       PGADMIN_DEFAULT_PASSWORD: strong-password
+

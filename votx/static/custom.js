@@ -12,7 +12,11 @@ document.addEventListener("DOMContentLoaded", function () {
 })
 
 function openWebSocket() {
-    ws = new WebSocket("ws://localhost:8000/vote/ws");
+    let socketProtocol = "wss://"
+    if (window.location.protocol === 'http:') {
+        socketProtocol = "ws://"
+    }
+    ws = new WebSocket(new URL("vote/ws", socketProtocol + window.location.host))
     ws.onmessage = function (event) {
         const message = JSON.parse(event.data)
         console.log(message)

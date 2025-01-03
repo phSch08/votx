@@ -14,27 +14,33 @@ docker-compose up -d
 
 Start Service
 ```
-fastapi dev votx/main.py
+python runVotx.py
 ```
 
 ## TODOs
 
-- dont allow changes as soon as ballot has been activated
+Must Have:
+
+
+Should Have:
+
+- update requirements.txt
 - Websocket via TLS (wss://) sicherstellen
 - Check that all incoming and outgoing data is piped through pydantic
-- equal name scheme
 - order vote options by option index
-- disable dangerous functions in admin interface
 - Weblink on PDF
 - QR Code on PDF
-- Beamer: url below logo
 - Admin: Regisseur Card
 - Admin: generate PDF in VoteGroup card?
 - Admin: generate PDF set strings in interface
-- Admin: see results before publishing to beamer
-- Admin: display custom message
-- Admin: display VotX logo if no message configured
-- Admin: export of results
 - Multiple Votes in Frontend
+- Random Value for vote in Frontend
 - Deployment
 - Tests
+- Handle Error: Registration Token already used
+- Handle Error: Invalid Voter Token
+- DB access data in env
+
+Could Have:
+- Multi Language Support
+- equal name scheme

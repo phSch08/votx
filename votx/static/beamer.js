@@ -25,7 +25,7 @@ function openWebSocket() {
             document.getElementById("mainContainer").style.opacity = 0
             await sleep(1000)
             setVoteCount(message.data.voteCount)
-            setVoteTitle(message.data.voteTitle)
+            setVoteTitle(message.data.voteTitle, false)
             setVoteOptions(message.data.voteOptions)
             hideStatistics()
             document.getElementById("mainContainer").style.opacity = 1
@@ -40,6 +40,7 @@ function openWebSocket() {
                 document.getElementById("mainContainer").style.opacity = 0
                 await sleep(1000)
                 setVoteTitle(message.data.voteTitle, false)
+                setVoteCount(message.data.voteCount)
                 setVoteOptions(message.data.voteOptions)
                 document.getElementById("mainContainer").style.opacity = 1
             }
@@ -58,15 +59,24 @@ function openWebSocket() {
 
 async function setText(text) {
     if (text.toLowerCase() == "votx") {
-        if (document.getElementById("voteTitle").hidden) {
+        if (!document.getElementById("voteTitle").hidden) {
             document.getElementById("mainContainer").style.opacity = 0
             await sleep(1000)
             document.getElementById("voteTitle").hidden = true
+            document.getElementById("voteOptionsElement").hidden = true
+            document.getElementById("voteCountElement").hidden = true
+            document.getElementById("voteTitle").value = text
             document.getElementById("votxLogo").hidden = false
             document.getElementById("mainContainer").style.opacity = 1
         }
+        hideStatistics()
     } else {
-        await setVoteTitle(text)
+        document.getElementById("mainContainer").style.opacity = 0
+        await sleep(1000)
+        await setVoteTitle(text, false)
+        hideStatistics()
+        document.getElementById("voteOptionsElement").hidden = true
+        document.getElementById("mainContainer").style.opacity = 1
     }
 }
 

@@ -14,7 +14,7 @@ from .exceptions.VoterUnauthorizedException import VoterUnauthorizedException
 
 from .security import check_password, create_access_token, create_voter_jwt
 
-from .dbModels import Ballot, BallotVoteGroup, UserVote, Vote, VoteGroup, VoteGroupMembership, VoteOption, VoterToken, db, RegistrationToken
+from .dbModels import Ballot, BallotProtocol, BallotVoteGroup, UserVote, Vote, VoteGroup, VoteGroupMembership, VoteOption, VoterToken, db, RegistrationToken
 from .Models import TokenData
 
 import uvicorn
@@ -41,7 +41,8 @@ async def lifespan(app: FastAPI):
         VoteOption,
         UserVote,
         Vote,
-        BallotVoteGroup])
+        BallotVoteGroup,
+        BallotProtocol])
     yield
     db.close()
 

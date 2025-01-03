@@ -17,7 +17,10 @@
         <div class="gridContainer grid-hidecolumns">
             <div class="gridItem gridItem1">
                 <div>
-                    <img id="votxLogo" src="{{ url_for('static', path='/logo.svg') }}">
+                    <div id="votxLogo">
+                        <img src="{{ url_for('static', path='/logo.svg') }}">
+                        <h5>{{ displayURL }}</h5>
+                    </div>
                     <h1 id="voteTitle" hidden>VotX</h1>
                     <p id="voteCountElement" hidden><span id="voteCount">0</span> Stimmen abgegeben...</p>
                 </div>

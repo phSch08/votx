@@ -1,4 +1,5 @@
 import json
+import os
 from fastapi import APIRouter, Depends, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -15,10 +16,11 @@ router = APIRouter(
 
 @router.get("/", response_class=HTMLResponse)
 def get_admin(request: Request) -> HTMLResponse:
+    print(os.environ.get('URL'))
     return templates.TemplateResponse(
         request=request,
         name="beamer.jinja",
-        context={ })
+        context={ "displayURL" : os.environ.get('URL')})
     
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):        

@@ -1,5 +1,7 @@
 import datetime
+from functools import cmp_to_key
 import json
+import locale
 import os
 import secrets
 import string
@@ -9,13 +11,15 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
-from ..pdfGenerator import PdfGenerator
+from votx.exceptions import BallotProtectedException
 
-from ..Models import BallotData, BaseBallotData, BeamerTextData, RegistrationTokenCreationData, VoteGroupCreationData, VoteGroupDeletionData
+from ..lib.pdfGenerator import generateBallotProtocol, generateRegistrationPDF
+
+from ..Models import BallotData, BaseBallotData, BeamerTextData, RegistrationTokenCreationData, RegistrationTokenResetData, VoteGroupCreationData, VoteGroupDeletionData
 
 from ..helpers import broadcast_user_ballots, socketManager
 
-from ..dbModels import BallotVoteGroup, RegistrationToken, Ballot, VoteGroup, VoteGroupMembership, VoteOption, db
+from ..dbModels import BallotProtocol, BallotVoteGroup, RegistrationToken, Ballot, VoteGroup, VoteGroupMembership, VoteOption, VoterToken, db
 
 from ..security import create_access_token, get_logged_in_user
 
@@ -31,7 +35,7 @@ router = APIRouter(
 
 @router.post("/", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
-def get_admin(request: Request, response: Response, user_name: Annotated[str, Depends(get_logged_in_user)], ballot: int | None = None) -> HTMLResponse:
+def get_admin(request: Request, response: Response, user_name: Annotated[str, Depends(get_logged_in_user)], ballot: int | None = None, danger: bool | None = None) -> HTMLResponse:
     selected_ballot = Ballot.get_or_none(Ballot.id == ballot)
 
     response = templates.TemplateResponse(
@@ -44,7 +48,10 @@ def get_admin(request: Request, response: Response, user_name: Annotated[str, De
             "selected_ballot": selected_ballot,
             "vote_groups": VoteGroup.select(VoteGroup, fn.EXISTS(BallotVoteGroup
                                                                  .select()
-                                                                 .where((BallotVoteGroup.ballot == selected_ballot) & (BallotVoteGroup.votegroup == VoteGroup.id))).alias("is_selected"))
+                                                                 .where((BallotVoteGroup.ballot == selected_ballot) &
+                                                                        (BallotVoteGroup.votegroup == VoteGroup.id)))
+                                            .alias("is_selected")),
+            "danger_mode": danger == True
         })
     expiry_time = int(os.environ.get('ADMIN_TOKEN_EXPIRY')
                       ) if 'ADMIN_TOKEN_EXPIRY' in os.environ else 20
@@ -53,7 +60,7 @@ def get_admin(request: Request, response: Response, user_name: Annotated[str, De
                             {"sub": user_name}, expiry_time),
                         secure=True,
                         httponly=True)
-    
+
     return response
 
 
@@ -84,11 +91,13 @@ async def beamerText(textData: BeamerTextData) -> None:
         })
     )
 
+
 @router.post("/ballot/{id}/activate")
 async def activateBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     ballot.active = True
     ballot.save()
+    BallotProtocol.create(ballot=ballot, message="Wahlgang gestartet")
     await broadcast_user_ballots()
 
 
@@ -97,9 +106,11 @@ async def deactivateBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
     ballot.active = False
     ballot.save()
+    BallotProtocol.create(ballot=ballot, message=f"Wahlgang gestoppt, {
+                          len(ballot.votes)} Stimme(n)")
     await broadcast_user_ballots()
-    
-    
+
+
 @router.post("/ballot/{id}/focus")
 async def focusBallot(id: int) -> None:
     ballot = Ballot.get_by_id(id)
@@ -130,19 +141,46 @@ async def showResult(id: int) -> None:
     )
 
 
+@router.get("/ballot/{id}/protocol")
+def getBallotProtocol(id: int):
+    ballot = Ballot.get_by_id(id)
+    voteOptions = ballot.voteOptions
+    votes = [vote for vo in voteOptions for vote in vo.votes]
+    
+    pdf = generateBallotProtocol(
+        ballot.title,
+        [(vo.title, len(vo.votes)) for vo in voteOptions],
+        [(ev.timestamp, ev.message) for ev in ballot.protocol],
+        sorted([(v.vote_option.title, v.custom_id) for v in votes], key=lambda el: el[1].lower()))
+    
+    headers = {'Content-Disposition': 'inline; filename="registration_sheets.pdf"'}
+    return Response(bytes(pdf.output()), media_type='application/pdf', headers=headers)
+
+
 @router.get("/registrationTokens/")
 def getRegistrationTokens():
     tokens = RegistrationToken.select()
-    generator = PdfGenerator(
-        "Wahlschein", "DLRG Vollversammlung", "15.03.2025", "Ihr Wahlcode")
 
-    pdf = generator.generateRegistrationPDF(
+    pdf = generateRegistrationPDF(
+        "Wahlschein",
+        "DLRG Vollversammlung",
+        "15.03.2025",
+        "Ihr Wahlcode",
+        os.environ.get('URL'),
         [(t.token, [membership.voteGroup.title for membership in t.memberships])
          for t in tokens]
     )
 
     headers = {'Content-Disposition': 'inline; filename="registration_sheets.pdf"'}
     return Response(bytes(pdf.output()), media_type='application/pdf', headers=headers)
+
+
+@router.post("/registrationToken/reset")
+def resetRegistrationToken(resetData: RegistrationTokenResetData):
+    registrationToken = RegistrationToken.get(
+        RegistrationToken.token == resetData.token)
+    for voterToken in registrationToken.voterToken:
+        voterToken.delete_instance()
 
 
 @ router.post("/registrationTokens/")
@@ -168,6 +206,15 @@ async def createBallot(ballotData: BaseBallotData) -> int:
             "title": ballotData.title})
     else:
         ballot = Ballot()
+
+    # do not allow changes if votes for the ballot exist
+    if len(ballot.votes) > 0:
+        raise BallotProtectedException(
+            "The ballot cannot be changed as there are already existing votes!")
+
+    if ballot.active:
+        raise BallotProtectedException(
+            "The ballot cannot be changed as it is currently active!")
 
     ballot.title = ballotData.title
     ballot.maximumVotes = ballotData.maximumVotes

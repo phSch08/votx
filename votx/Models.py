@@ -54,3 +54,7 @@ class VoteGroupDeletionData(BaseModel):
 
 class BeamerTextData(BaseModel):
     text: str
+    
+
+class RegistrationTokenResetData(BaseModel):
+    token: str

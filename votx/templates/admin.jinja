@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', path='/pico.violet.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='/custom.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='/admin.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', path='/inputmask.js') }}" defer></script>
     <script type="text/javascript" src="{{ url_for('static', path='/admin.js') }}" defer></script>
     <title>VotX</title>
 </head>
@@ -16,14 +17,21 @@
     <header class="mainheader">
         <nav class="container-fluid">
             <ul>
-                <img class="mainheading" src="{{ url_for('static', path='/logo.svg') }}">
-                Admin
+                <li><img class="mainheading" src="{{ url_for('static', path='/logo.svg') }}"></li>
+                <li>Admin</li>
             </ul>
             <ul>
-                {{ user_name }}
+                <li>{{ user_name }}</li>
+                <li><a href="./logout/">Logout</a></li>
             </ul>
             <ul>
-                <a href="./logout/">Logout</a>
+                <li>
+                    <label>
+                        <input id="dangerModeSwitch" type="checkbox" role="switch" aria-invalid="true"
+                            onclick="changeDangerMode(this)" {% if danger_mode %} checked {% endif %} />
+                        Gefahren Modus
+                    </label>
+                </li>
             </ul>
         </nav>
     </header>
@@ -32,8 +40,10 @@
             <header>Regie</header>
             <div class="grid">
                 <button onclick="textToBeamer()">Text</button>
-                <button {% if selected_ballot %} onclick="focusBallot({{ selected_ballot.id }})" {% else %} disabled {% endif %}>Fokus</button>
-                <button {% if (not selected_ballot) or selected_ballot.active %} disabled {% else %} onclick="showBallotResult({{ selected_ballot.id }})" {% endif %}>Ergebnis</button>
+                <button {% if selected_ballot %} onclick="focusBallot({{ selected_ballot.id }})" {% else %} disabled {%
+                    endif %}>Fokus</button>
+                <button {% if (not selected_ballot) or selected_ballot.active %} disabled {% else %}
+                    onclick="showBallotResult({{ selected_ballot.id }})" {% endif %}>Ergebnis</button>
             </div>
             <label>
                 Anzuzeigender Text
@@ -59,8 +69,12 @@
                     <div class="grid">
                         {% if selected_ballot.active %}
                         <button type="button" class="outline"
+                            onclick="getBallotProtocol({{ selected_ballot.id }})" disabled>Wahlprotokoll</button>
+                        <button type="button" class="outline"
                             onclick="deactivateBallot({{ selected_ballot.id }})">Deaktivieren</button>
                         {% else %}
+                        <button type="button" class="outline"
+                            onclick="getBallotProtocol({{ selected_ballot.id }})">Wahlprotokoll</button>
                         <button type="button" class="outline"
                             onclick="activateBallot({{ selected_ballot.id }})">Aktivieren</button>
                         {% endif %}
@@ -75,21 +89,31 @@
                             </tr>
                         </thead>
                         {% for voteOption in selected_ballot.voteOptions%}
-                            <tr>
-                                <td>{{voteOption.title}}</td>
-                                <td>{{voteOption.votes|length}}</td>
-                            </tr>
+                        <tr>
+                            <td>{{voteOption.title}}</td>
+                            <td>{{voteOption.votes|length}}</td>
+                        </tr>
                         {% endfor %}
-                    {% endif %}
+                        {% endif %}
                     </table>
                     <hr>
+                    {% if not selected_ballot.active and selected_ballot.votes|length %}
+                    <blockquote>
+                        Die gewünschte Wahl kann nicht mehr bearbeitet werden, da bereits Stimmen für diese abgegeben
+                        wurden.
+                    </blockquote>
+                    {% elif selected_ballot.active %}
+                    <blockquote>
+                        Die gewünschte Wahl kann nicht bearbeitet werden, da sie derzeit aktiv ist.
+                    </blockquote>
+                    {% endif %}
                     <form id="ballot_edit_form">
                         <input type="hidden" name="ballot_id" value="{{selected_ballot.id}}" />
                         <label>
                             Titel
                             <input type="text" name="ballot_title" placeholder="Titel" aria-label="Text"
-                                value="{{ selected_ballot.title }}" {% if selected_ballot.active %} disabled {% endif
-                                %}>
+                                value="{{ selected_ballot.title }}" {% if selected_ballot.active or
+                                selected_ballot.votes|length %} disabled {% endif %}>
                         </label>
                         <label id="vote_option_list">
                             Antworten
@@ -99,15 +123,16 @@
                             </template>
                             {% for voteOption in selected_ballot.voteOptions %}
                             <input type="text" name="ballot_vote_option" placeholder="Antwort" aria-label="Text"
-                                value="{{voteOption.title}}" {% if selected_ballot.active %} disabled {% endif %}>
+                                value="{{voteOption.title}}" {% if selected_ballot.active or
+                                selected_ballot.votes|length %} disabled {% endif %}>
                             {% endfor %}
                         </label>
                         <fieldset class="grid">
                             <button type="button" class="outline secondary" onclick="removeVoteOption()" {% if
-                                selected_ballot.active %} disabled {% endif %}>Antwort
+                                selected_ballot.active or selected_ballot.votes|length %} disabled {% endif %}>Antwort
                                 entfernen</button>
                             <button type="button" class="outline secondary" onclick="addVoteOption()" {% if
-                                selected_ballot.active %} disabled {% endif %}>Antwort
+                                selected_ballot.active or selected_ballot.votes|length %} disabled {% endif %}>Antwort
                                 hinzufügen</button>
                         </fieldset>
 
@@ -115,17 +140,20 @@
                             <label>
                                 Minimum Votes
                                 <input type="number" name="ballot_min_votes" value="{{ selected_ballot.minimumVotes }}"
-                                    aria-label="Number" min="0" {% if selected_ballot.active %} disabled {% endif %}>
+                                    aria-label="Number" min="0" {% if selected_ballot.active or
+                                    selected_ballot.votes|length %} disabled {% endif %}>
                             </label>
                             <label>
                                 Maximum Votes
                                 <input type="number" name="ballot_max_votes" value="{{ selected_ballot.maximumVotes }}"
-                                    aria-label="Number" min="0" {% if selected_ballot.active %} disabled {% endif %}>
+                                    aria-label="Number" min="0" {% if selected_ballot.active or
+                                    selected_ballot.votes|length %} disabled {% endif %}>
                             </label>
                             <label>
                                 Stimmhäufung
                                 <select name="ballot_vote_stacking" aria-label="Select your favorite cuisine..."
-                                    required {% if selected_ballot.active %} disabled {% endif %}>
+                                    required {% if selected_ballot.active or selected_ballot.votes|length %} disabled {%
+                                    endif %}>
                                     <option value="true" {% if selected_ballot.voteStacking %} selected {% endif %}>Ja
                                     </option>
                                     <option value="false" {% if (selected_ballot.voteStacking==False) %} selected {%
@@ -138,15 +166,15 @@
                             {% for vote_group in vote_groups %}
                             <label class="cbLabel">
                                 <input type="checkbox" name="vote_group_checkbox" value="{{vote_group.id}}" {% if
-                                    selected_ballot.active %} disabled {% endif %} {% if vote_group.is_selected %}
-                                    checked {% endif %}>
+                                    selected_ballot.active or selected_ballot.votes|length %} disabled {% endif %} {% if
+                                    vote_group.is_selected %} checked {% endif %}>
                                 {{ vote_group.title }}
                             </label>
                             {% endfor %}
                         </fieldset>
                         <fieldset class="grid">
-                            <button type="button" class="" onclick="updateBallot()" {% if selected_ballot.active %}
-                                disabled {% endif %}>Speichern</button>
+                            <button type="button" class="" onclick="updateBallot()" {% if selected_ballot.active or
+                                selected_ballot.votes|length %} disabled {% endif %}>Speichern</button>
                         </fieldset>
                     </form>
                 </div>
@@ -168,7 +196,8 @@
                     <tr scope="row">
                         <td>{{vote_group.id}}</td>
                         <td>{{vote_group.title}}</td>
-                        <td><button class="outline" onclick="deleteVoteGroup({{vote_group.id}})">Löschen</button></td>
+                        <td><button class="outline" onclick="deleteVoteGroup({{vote_group.id}})" {% if not danger_mode
+                                %}disabled{%endif%}>Löschen</button></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -183,7 +212,18 @@
             </form>
         </article>
         <article>
-            <header>Wahlscheine</header>
+            <header>Wahlschein Zurücksetzen</header>
+            <form>
+                <label>
+                    Wahlcode
+                    <input id="resetTokenInput" placeholder="XXXXX - XXXXX - XXXXX" data-slots="X"
+                        style="text-align:center; font-family: monospace;" inputmode="numeric" />
+                </label>
+                <button type="button" class="" onclick="resetRegistrationTokens()">Zurücksetzen</button>
+            </form>
+        </article>
+        <article>
+            <header>Wahlscheine Erzeugen</header>
             <form>
                 <label>
                     Anzahl Wahlscheine

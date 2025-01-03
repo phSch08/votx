@@ -14,8 +14,26 @@ function generateRegistrationTokens() {
     )
 }
 
+function resetRegistrationTokens(){
+    const input = document.getElementById("resetTokenInput")
+    fetch("registrationToken/reset", {
+        method: "POST",
+        body: JSON.stringify({
+            token: input.value
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    }).then((res) => { input.value = ""})
+}
+
 function getTokenPDF() {
     const pdfURL = new URL("registrationTokens", window.location.href)
+    window.open(pdfURL.href)
+}
+
+function getBallotProtocol(ballotId) {
+    const pdfURL = new URL(`ballot/${ballotId}/protocol`, window.location.href)
     window.open(pdfURL.href)
 }
 
@@ -122,4 +140,10 @@ function textToBeamer() {
             "Content-type": "application/json; charset=UTF-8"
         }
     })
+}
+
+function changeDangerMode(checkbox) {
+    let params = new URLSearchParams(location.search)
+    params.set('danger', checkbox.checked)
+    window.location.search = params.toString()
 }

@@ -1,7 +1,7 @@
 import json
-from .dbModels import BallotVoteGroup, RegistrationToken, Ballot, UserVote, VoteGroup, VoteGroupMembership, VoteOption, VoterToken
-from .Models import BallotData, VoteOptionData
-from .socketManager import SocketManager
+from ..dbModels import BallotVoteGroup, RegistrationToken, Ballot, UserVote, VoteGroup, VoteGroupMembership, VoteOption, VoterToken
+from ..Models import BallotData, VoteOptionData
+from ..socketManager import SocketManager
 from peewee import JOIN, Case
 
 socketManager = SocketManager()

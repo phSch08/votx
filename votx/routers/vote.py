@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from peewee import DoesNotExist
 
-from ..helpers import get_user_ballots, socketManager, updateBeamerVoteCount
+from ..helpers.data import get_user_ballots, socketManager, updateBeamerVoteCount
 
 from ..Models import VoteData
 from ..dbModels import Ballot, UserVote, Vote, VoteOption, VoterToken, db

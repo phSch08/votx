@@ -17,7 +17,7 @@ from ..helpers.pdfGenerator import generateBallotProtocol, generateRegistrationP
 
 from ..Models import BallotData, BaseBallotData, BeamerTextData, RegistrationTokenCreationData, RegistrationTokenResetData, VoteGroupCreationData, VoteGroupDeletionData
 
-from ..data import broadcast_user_ballots, socketManager
+from ..helpers.data import broadcast_user_ballots, socketManager
 
 from ..dbModels import BallotProtocol, BallotVoteGroup, RegistrationToken, Ballot, VoteGroup, VoteGroupMembership, VoteOption, VoterToken, db
 

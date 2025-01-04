@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
     yield
     db.close()
 
-app = FastAPI(lifespan=lifespan, host='0.0.0.0')
+app = FastAPI(lifespan=lifespan, host='0.0.0.0', docs_url=None, redoc_url=None)
 app.mount("/static", StaticFiles(directory="votx/static"), name="static")
 templates = Jinja2Templates(directory="votx/templates")
 

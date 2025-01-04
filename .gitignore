@@ -157,3 +157,6 @@ cython_debug/
 
 # VS Code
 .vscode/
+
+# Ignore custom docker compose files
+docker-compose.yml

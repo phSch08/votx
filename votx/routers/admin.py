@@ -13,11 +13,11 @@ from fastapi.templating import Jinja2Templates
 
 from votx.exceptions import BallotProtectedException
 
-from ..lib.pdfGenerator import generateBallotProtocol, generateRegistrationPDF
+from ..helpers.pdfGenerator import generateBallotProtocol, generateRegistrationPDF
 
 from ..Models import BallotData, BaseBallotData, BeamerTextData, RegistrationTokenCreationData, RegistrationTokenResetData, VoteGroupCreationData, VoteGroupDeletionData
 
-from ..helpers import broadcast_user_ballots, socketManager
+from ..data import broadcast_user_ballots, socketManager
 
 from ..dbModels import BallotProtocol, BallotVoteGroup, RegistrationToken, Ballot, VoteGroup, VoteGroupMembership, VoteOption, VoterToken, db
 

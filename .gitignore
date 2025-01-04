@@ -160,3 +160,6 @@ cython_debug/
 
 # Ignore custom docker compose files
 docker-compose.yml
+
+# backup files
+*.bak

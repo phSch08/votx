@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Request, Response, WebSocket, WebSocketD
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from ..helpers import socketManager
+from ..helpers.data import socketManager
 
 templates = Jinja2Templates(directory="votx/templates")
 router = APIRouter(

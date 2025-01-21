@@ -14,6 +14,7 @@ from .exceptions.VoterUnauthorizedException import VoterUnauthorizedException
 SECRET_KEY = os.environ.get('SECRET_KEY')
 ALGORITHM = os.environ.get('ALGORITHM')
 
+
 def get_voter_token_from_jwt(voter_token: Annotated[str | None, Cookie()] = None) -> str:
     try:
         payload = jwt.decode(voter_token, SECRET_KEY, algorithms=[ALGORITHM])

@@ -37,12 +37,13 @@ class BallotData(BaseModel):
 class VoteData(BaseModel):
     ballotId: int
     votes: list[int]
+    customId: str
 
 
 class TokenData(BaseModel):
     access_token: str
     token_type: str
-    
+
 
 class VoteGroupCreationData(BaseModel):
     title: str

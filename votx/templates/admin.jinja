@@ -140,20 +140,20 @@
                             <label>
                                 Minimum Votes
                                 <input type="number" name="ballot_min_votes" value="{{ selected_ballot.minimumVotes }}"
-                                    aria-label="Number" min="0" {% if selected_ballot.active or
+                                    aria-label="Number" min="1" {% if selected_ballot.active or
                                     selected_ballot.votes|length %} disabled {% endif %}>
                             </label>
                             <label>
                                 Maximum Votes
                                 <input type="number" name="ballot_max_votes" value="{{ selected_ballot.maximumVotes }}"
-                                    aria-label="Number" min="0" {% if selected_ballot.active or
+                                    aria-label="Number" min="1" {% if selected_ballot.active or
                                     selected_ballot.votes|length %} disabled {% endif %}>
                             </label>
                             <label>
                                 Stimmhäufung
                                 <select name="ballot_vote_stacking" aria-label="Select your favorite cuisine..."
                                     required {% if selected_ballot.active or selected_ballot.votes|length %} disabled {%
-                                    endif %}>
+                                    endif %} disabled>
                                     <option value="true" {% if selected_ballot.voteStacking %} selected {% endif %}>Ja
                                     </option>
                                     <option value="false" {% if (selected_ballot.voteStacking==False) %} selected {%

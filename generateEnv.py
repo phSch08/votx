@@ -38,4 +38,5 @@ with open("db.env", "w") as f:
         f.write("POSTGRES_PASSWORD=strong-password\n")
     else:
         f.write("POSTGRES_PASSWORD=" + os.urandom(30).hex() + "\n")
+    f.write("PGUSER=votx\n")
         

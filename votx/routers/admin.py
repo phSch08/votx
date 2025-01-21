@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
-from votx.exceptions import BallotProtectedException
+from votx.exceptions import BallotProtectedException, InvalidBallotConfiguration
 
 from ..helpers.pdfGenerator import generateBallotProtocol, generateRegistrationPDF
 
@@ -215,10 +215,15 @@ async def createBallot(ballotData: BaseBallotData) -> int:
     if ballot.active:
         raise BallotProtectedException(
             "The ballot cannot be changed as it is currently active!")
+        
+    if min(ballotData.maximumVotes, ballotData.minimumVotes) < 1:
+        raise InvalidBallotConfiguration(
+            "The number of minimum- or maximum votes cannot be lower than 1!"
+        )
 
     ballot.title = ballotData.title
-    ballot.maximumVotes = ballotData.maximumVotes
-    ballot.minimumVotes = ballotData.minimumVotes
+    ballot.maximumVotes = max(ballotData.maximumVotes, ballotData.minimumVotes)
+    ballot.minimumVotes = min(ballotData.maximumVotes, ballotData.minimumVotes)
     ballot.voteStacking = ballotData.voteStacking
     ballot.active = ballotData.active
     ballot.save()

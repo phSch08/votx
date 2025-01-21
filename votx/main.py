@@ -1,18 +1,17 @@
 import os
-from typing import Tuple, Annotated
-from fastapi import Depends, FastAPI, Form, HTTPException, Request
+from typing import Annotated
+from fastapi import Cookie, Depends, FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from contextlib import asynccontextmanager
 from peewee import DoesNotExist
-from dotenv import load_dotenv
 
 from .exceptions.AdminUnauthorizedException import AdminUnauthorizedException
 from .exceptions.VoterUnauthorizedException import VoterUnauthorizedException
 
-from .security import check_password, create_access_token, create_voter_jwt
+from .security import check_password, create_access_token, create_voter_jwt, get_voter_token_from_jwt
 
 from .dbModels import Ballot, BallotProtocol, BallotVoteGroup, UserVote, Vote, VoteGroup, VoteGroupMembership, VoteOption, VoterToken, db, RegistrationToken
 from .Models import TokenData
@@ -56,29 +55,36 @@ app.include_router(vote.router)
 
 
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request):
-    return templates.TemplateResponse(request=request, name="index.jinja")
+def index(request: Request, voter_token: Annotated[str | None, Cookie()] = None):
+    try:
+        get_voter_token_from_jwt(voter_token)
+        response = RedirectResponse("/vote/")
+        return response
+    
+    except:
+        return templates.TemplateResponse(request=request, name="index.jinja", context={"alert_message": ""})
 
 
 @app.post("/register")
-def register_voter(registrationToken: Annotated[str, Form()]):
+def register_voter(request: Request, registrationToken: Annotated[str, Form()]):
+
     # check if registrationToken is in db
     try:
         token = RegistrationToken.get(
             RegistrationToken.token == registrationToken)
     except DoesNotExist:
-        return (False, "Registration Token does not exist!")
+        return templates.TemplateResponse(request=request, name="index.jinja", context={"alert_message": "Ungültiges Registrierungstoken!"})
 
     # check if registrationToken is in use already
     if len(token.voterToken) > 0:
-        return (False, "Registration Token already used!")
+        return templates.TemplateResponse(request=request, name="index.jinja", context={"alert_message": "Registrierungstoken bereits genutzt!"})
 
     # create voterToken
     voterToken = VoterToken.create(
         token=secrets.token_hex(64), registrationToken=token)
 
     expiry_time = int(os.environ.get('VOTER_TOKEN_EXPIRY')
-                      ) if 'VOTER_TOKEN_EXPIRY' in os.environ else 60*24
+                    ) if 'VOTER_TOKEN_EXPIRY' in os.environ else 60*24
 
     response = RedirectResponse("/vote/")
     response.set_cookie(

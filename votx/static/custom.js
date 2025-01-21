@@ -55,6 +55,7 @@ function closeModal() {
         document.getElementById("voteInProgress").hidden = false
         document.getElementById("voteSuccessfull").hidden = true
         document.getElementById("voteFailed").hidden = true
+        document.getElementById("voteSecret").type = "password"
     }, 400);
 
 }
@@ -65,9 +66,11 @@ function sendMessage(content) {
 }
 
 function vote(content) {
+    const customId = window.crypto.randomUUID().split("-").at(-1).toUpperCase()
     const modal = document.getElementById("voteDialog")
     const { documentElement: html } = document;
 
+    document.getElementById("voteSecret").value = customId
     html.classList.add("modal-is-open", "modal-is-opening");
     setTimeout(() => {
         html.classList.remove("modal-is-opening");
@@ -78,7 +81,11 @@ function vote(content) {
         type: 'VOTE',
         data: {
             ballotId: +content.querySelector(".formVoteId").value,
-            votes: [+content.querySelector(".voteOptions input[type=radio]:checked").value]
+            votes: [...document.querySelectorAll(
+                ".voteOptions input[type=radio]:checked,\
+                .voteOptions input[type=checkbox]:checked"
+            )].map(el => +el.value),
+            customId
         }
     }))
 }
@@ -142,7 +149,12 @@ function getVoteCard(voteId, voteTitle, voteOptions, minVotes, maxVotes, accumul
     for (const option of voteOptions.sort((a, b) => { return a.optionIndex - b.optionIndex })) {
         const voteOption = document.createElement("label")
         const input = document.createElement("input")
-        input.type = "radio"
+        if (maxVotes == 1) {
+            input.type = "radio"
+        } else {
+            input.type = "checkbox"
+        }
+            
         input.name = "vc" + vcCounter
         input.value = option.optionId
         voteOption.appendChild(input)
@@ -151,4 +163,13 @@ function getVoteCard(voteId, voteTitle, voteOptions, minVotes, maxVotes, accumul
         clone.querySelector(".voteOptions").appendChild(voteOption)
     }
     return clone
+}
+
+function toggleVoteSecretVisibility() {
+    secret = document.getElementById("voteSecret")
+    if (secret.type === "password") {
+        secret.type = "text"
+    } else {
+        secret.type = "password"
+    }
 }

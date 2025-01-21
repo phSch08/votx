@@ -24,7 +24,9 @@
         <form action="{{ url_for('register_voter') }}" method="post">
             <article>
                 <header>Registrierungstoken Eingeben</header>
-
+                {% if alert_message %}
+                    <article class="alert">🛈 {{alert_message}}</article>
+                {% endif %}
                 <input name="registrationToken" placeholder="XXXXX - XXXXX - XXXXX" data-slots="X"
                     style="text-align:center; font-family: monospace;" inputmode="numeric" />
                 <p>Durch ausführen der Anmeldung wird das Registrierungstoken ungültig. Die Teilnahme an der Wahl

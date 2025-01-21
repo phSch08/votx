@@ -1,8 +1,8 @@
 import json
 import traceback
 from typing import Annotated, Tuple
-from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect, status
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, WebSocket, WebSocketDisconnect, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from peewee import DoesNotExist
 
@@ -29,12 +29,17 @@ def voteScreen(request: Request,  voter_token: Annotated[str, Depends(get_voter_
     try:
         token = VoterToken.get(VoterToken.token == voter_token)
     except DoesNotExist:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Voter Token"
-        )
+        response = RedirectResponse(url="/")
+        response.delete_cookie("voter_token")
+        return response
         
     return templates.TemplateResponse(request=request, name="vote.jinja")
+
+@router.get("/logout")
+async def logout(response: Response):
+    response = RedirectResponse("/", status_code=status.HTTP_302_FOUND)
+    response.delete_cookie(key="voter_token")
+    return response
 
 async def vote(vote: VoteData, token: VoterToken) -> Tuple[bool, str]:
     try:
@@ -59,18 +64,21 @@ async def vote(vote: VoteData, token: VoterToken) -> Tuple[bool, str]:
         return (False, "Voteoption ids do not match ballot!")
 
     # check if vote is correct
-    if (len(vote.votes) > ballot.maximumVotes and len(vote.votes) < ballot.minimumVotes):
+    if (len(vote.votes) > ballot.maximumVotes or len(vote.votes) < ballot.minimumVotes):
         return (False, "The number of given votes does not match the expected number of votes!")
 
     # check for vote stacking
     if len(vote.votes) != len(set(vote.votes)) and ballot.voteStacking == False:
         return (False, "Vote Stacking is not allowed!")
+    
+    if len(vote.customId) != 12:
+        return (False, "The custom ID must consist of exactly 12 characters")
 
     # perform vote and mark as voted
     try:
         with db.atomic():
             for voteOption in vote.votes:
-                Vote.create(vote_option = VoteOption.get_by_id(voteOption), custom_id = "")
+                Vote.create(vote_option = VoteOption.get_by_id(voteOption), custom_id = vote.customId)
             UserVote.create(voter = registrationToken, ballot = ballot)
     except:
         return (False, "Failure while Voting!")

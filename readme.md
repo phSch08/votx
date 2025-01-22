@@ -18,7 +18,7 @@ docker-compose up -d
 
 Start Service
 ```
-python runVotx.py
+python run_votx.py
 ```
 
 Linting/Formatting

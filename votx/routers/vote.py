@@ -1,18 +1,25 @@
 import json
 import traceback
-from typing import Annotated, Tuple
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, WebSocket, WebSocketDisconnect, status
+from typing import Annotated
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from peewee import DoesNotExist
 
-from ..helpers.data import get_user_ballots, socketManager, updateBeamerVoteCount
-
-from ..Models import VoteData
-from ..dbModels import Ballot, UserVote, Vote, VoteOption, VoterToken, db
-
+from ..db_models import Ballot, UserVote, Vote, VoteOption, VoterToken, db
+from ..helpers.data import get_user_ballots, socket_manager, update_beamer_vote_count
+from ..models import VoteData
 from ..security import get_voter_token_from_jwt
-
 
 templates = Jinja2Templates(directory="votx/templates")
 
@@ -23,17 +30,21 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 @router.post("/", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
-def voteScreen(request: Request,  voter_token: Annotated[str, Depends(get_voter_token_from_jwt)]):
+def vote_screen(
+    request: Request, voter_token: Annotated[str, Depends(get_voter_token_from_jwt)]
+):
     try:
-        token = VoterToken.get(VoterToken.token == voter_token)
+        VoterToken.get(VoterToken.token == voter_token)
     except DoesNotExist:
         response = RedirectResponse(url="/")
         response.delete_cookie("voter_token")
         return response
-        
+
     return templates.TemplateResponse(request=request, name="vote.jinja")
+
 
 @router.get("/logout")
 async def logout(response: Response):
@@ -41,89 +52,99 @@ async def logout(response: Response):
     response.delete_cookie(key="voter_token")
     return response
 
-async def vote(vote: VoteData, token: VoterToken) -> Tuple[bool, str]:
+
+async def vote(vote: VoteData, token: VoterToken) -> tuple[bool, str]:
     try:
-        ballot = Ballot.get_by_id(vote.ballotId)
-        registrationToken = token.registrationToken
+        ballot = Ballot.get_by_id(vote.ballot_id)
+        registration_token = token.registration_token
     except DoesNotExist:
         return (False, "Ballot does not exist!")
 
-
-    if (not ballot.active):
+    if not ballot.active:
         return (False, "Ballot is not active!")
 
     # check if vote is possible
-    if (UserVote.select().where(
-        (UserVote.voter == registrationToken) &
-        (UserVote.ballot == ballot)
-        ).exists()):
+    if (
+        UserVote.select()
+        .where((UserVote.voter == registration_token) & (UserVote.ballot == ballot))
+        .exists()
+    ):
         return (False, "Already voted for this ballot!")
-    
+
     # Check if VoteOption Ids match with ballot
-    if not (set(vote.votes) <=  set(map(lambda voteOption: voteOption.id, ballot.voteOptions))):
+    if not (
+        set(vote.votes)
+        <= set(map(lambda vote_option: vote_option.id, ballot.voteOptions))
+    ):
         return (False, "Voteoption ids do not match ballot!")
 
     # check if vote is correct
-    if (len(vote.votes) > ballot.maximumVotes or len(vote.votes) < ballot.minimumVotes):
-        return (False, "The number of given votes does not match the expected number of votes!")
+    if len(vote.votes) > ballot.maximumVotes or len(vote.votes) < ballot.minimumVotes:
+        return (
+            False,
+            "The number of given votes does not match the expected number of votes!",
+        )
 
     # check for vote stacking
-    if len(vote.votes) != len(set(vote.votes)) and ballot.voteStacking == False:
+    if len(vote.votes) != len(set(vote.votes)) and not ballot.voteStacking:
         return (False, "Vote Stacking is not allowed!")
-    
-    if len(vote.customId) != 12:
+
+    if len(vote.custom_id) != 12:
         return (False, "The custom ID must consist of exactly 12 characters")
 
     # perform vote and mark as voted
     try:
         with db.atomic():
-            for voteOption in vote.votes:
-                Vote.create(vote_option = VoteOption.get_by_id(voteOption), custom_id = vote.customId)
-            UserVote.create(voter = registrationToken, ballot = ballot)
-    except:
+            for vote_option in vote.votes:
+                Vote.create(
+                    vote_option=VoteOption.get_by_id(vote_option),
+                    custom_id=vote.custom_id,
+                )
+            UserVote.create(voter=registration_token, ballot=ballot)
+    except Exception:
         return (False, "Failure while Voting!")
-    
-    await updateBeamerVoteCount(ballot)
+
+    await update_beamer_vote_count(ballot)
     return (True, "Vote Successful")
 
+
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, voter_token: Annotated[str, Depends(get_voter_token_from_jwt)]):        
+async def websocket_endpoint(
+    websocket: WebSocket, voter_token: Annotated[str, Depends(get_voter_token_from_jwt)]
+):
     try:
         token = VoterToken.get(VoterToken.token == voter_token)
-    except DoesNotExist:
+    except DoesNotExist as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Voter Token"
-        )
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Voter Token"
+        ) from e
 
-    await socketManager.connect_voter(websocket, token.token)
-    
+    await socket_manager.connect_voter(websocket, token.token)
+
     try:
-        await websocket.send_json({'type': 'AUTHENTICATED'})
-        
+        await websocket.send_json({"type": "AUTHENTICATED"})
+
         while True:
             try:
                 message = await websocket.receive_json()
 
-                if (message["type"] == "GETBALLOTS"):
-                    await websocket.send_json({
-                        'type': 'BALLOTS', 
-                        'data': get_user_ballots(voter_token)
-                    })
+                if message["type"] == "GETBALLOTS":
+                    await websocket.send_json(
+                        {"type": "BALLOTS", "data": get_user_ballots(voter_token)}
+                    )
 
-                if (message["type"] == "VOTE"):
-                    voteData = VoteData.model_validate(message["data"])
-                    voteResult = await vote(voteData, token)
-                    await websocket.send_json({'type': 'VOTERESULT', 'data': {'success': voteResult[0]}})
-                    await websocket.send_json({
-                        'type': 'BALLOTS', 
-                        'data': get_user_ballots(voter_token)
-                    })
-                    
+                if message["type"] == "VOTE":
+                    vote_data = VoteData.model_validate(message["data"])
+                    vote_result = await vote(vote_data, token)
+                    await websocket.send_json(
+                        {"type": "VOTERESULT", "data": {"success": vote_result[0]}}
+                    )
+                    await websocket.send_json(
+                        {"type": "BALLOTS", "data": get_user_ballots(voter_token)}
+                    )
+
             except (json.JSONDecodeError, KeyError):
                 print("Failed to parse Message")
                 print(traceback.format_exc())
     except WebSocketDisconnect:
-        socketManager.disconnect_voter(websocket)
-
-    
+        socket_manager.disconnect_voter(websocket)

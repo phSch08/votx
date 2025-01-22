@@ -6,6 +6,5 @@ class BallotProtectedException(HTTPException):
         super().__init__(
             status_code=status.HTTP_423_LOCKED,
             detail=detail,
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
-

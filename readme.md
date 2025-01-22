@@ -4,7 +4,7 @@ Written with Python Verions 3.12
 
 Create .env file using the provided script:
 ```
-python generateEnv.py
+python generate_env.py
 ```
 
 Start Database
@@ -15,6 +15,12 @@ docker-compose up -d
 Start Service
 ```
 python runVotx.py
+```
+
+Linting/Formatting
+```(bash)
+$ ruff check [--fix | --watch]
+$ ruff format
 ```
 
 ## TODOs

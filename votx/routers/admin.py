@@ -223,7 +223,7 @@ def reset_registration_token(reset_data: RegistrationTokenResetData):
 
 @router.post("/registrationTokens/")
 def generate_registration_tokens(
-    access_code_creation_data: RegistrationTokenCreationData
+    access_code_creation_data: RegistrationTokenCreationData,
 ):
     with db.atomic():
         for i in range(access_code_creation_data.amount):

@@ -40,7 +40,7 @@ services:
 
 networks:
   public:
-    name: public_network
+    name: default_network
     external: true
   private:
     external: false

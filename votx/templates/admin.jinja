@@ -154,9 +154,9 @@
                                 <select name="ballot_vote_stacking" aria-label="Select your favorite cuisine..."
                                     required {% if selected_ballot.active or selected_ballot.votes|length %} disabled {%
                                     endif %} disabled>
-                                    <option value="true" {% if selected_ballot.voteStacking %} selected {% endif %}>Ja
+                                    <option value="true" {% if selected_ballot.vote_stacking %} selected {% endif %}>Ja
                                     </option>
-                                    <option value="false" {% if (selected_ballot.voteStacking==False) %} selected {%
+                                    <option value="false" {% if (selected_ballot.vote_stacking==False) %} selected {%
                                         endif %}>Nein</option>
                                 </select>
                             </label>

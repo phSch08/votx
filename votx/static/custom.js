@@ -66,11 +66,11 @@ function sendMessage(content) {
 }
 
 function vote(content) {
-    const customId = window.crypto.randomUUID().split("-").at(-1).toUpperCase()
+    const custom_id = window.crypto.randomUUID().split("-").at(-1).toUpperCase()
     const modal = document.getElementById("voteDialog")
     const { documentElement: html } = document;
 
-    document.getElementById("voteSecret").value = customId
+    document.getElementById("voteSecret").value = custom_id
     html.classList.add("modal-is-open", "modal-is-opening");
     setTimeout(() => {
         html.classList.remove("modal-is-opening");
@@ -80,12 +80,12 @@ function vote(content) {
     sendMessage(JSON.stringify({
         type: 'VOTE',
         data: {
-            ballotId: +content.querySelector(".formVoteId").value,
+            ballot_id: +content.querySelector(".formVoteId").value,
             votes: [...document.querySelectorAll(
                 ".voteOptions input[type=radio]:checked,\
                 .voteOptions input[type=checkbox]:checked"
             )].map(el => +el.value),
-            customId
+            custom_id
         }
     }))
 }
@@ -100,10 +100,6 @@ function toggleCard(voteCardId) {
     }
 }
 
-function fetchBallotToken(ballotId) {
-    return "TOKEN"
-}
-
 function updateBallots(ballotUpdate) {
     const ballotList = document.getElementById("voteList")
     for (const ballot of ballotUpdate) {
@@ -111,10 +107,10 @@ function updateBallots(ballotUpdate) {
             const ballotItem = getVoteCard(
                 ballot.id,
                 ballot.title,
-                ballot.voteOptions,
-                ballot.minimumVotes,
-                ballot.maximumVotes,
-                ballot.voteStacking,
+                ballot.vote_options,
+                ballot.minimum_votes,
+                ballot.maximum_votes,
+                ballot.vote_stacking,
                 ballot.voted ? "Gewählt" : "Wahl ausstehend")
 
             ballots[ballot.id] = ballotItem.children[0].id
@@ -146,7 +142,7 @@ function getVoteCard(voteId, voteTitle, voteOptions, minVotes, maxVotes, accumul
     clone.querySelector(".voteState").textContent = state
     clone.querySelector(".formVoteId").value = voteId
 
-    for (const option of voteOptions.sort((a, b) => { return a.optionIndex - b.optionIndex })) {
+    for (const option of voteOptions.sort((a, b) => { return a.option_index - b.option_index })) {
         const voteOption = document.createElement("label")
         const input = document.createElement("input")
         if (maxVotes == 1) {
@@ -156,9 +152,9 @@ function getVoteCard(voteId, voteTitle, voteOptions, minVotes, maxVotes, accumul
         }
             
         input.name = "vc" + vcCounter
-        input.value = option.optionId
+        input.value = option.option_id
         voteOption.appendChild(input)
-        voteOption.appendChild(document.createTextNode(option.optionTitle))
+        voteOption.appendChild(document.createTextNode(option.option_title))
 
         clone.querySelector(".voteOptions").appendChild(voteOption)
     }

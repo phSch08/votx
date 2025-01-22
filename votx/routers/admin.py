@@ -143,9 +143,9 @@ async def focus_ballot(id: int) -> None:
             {
                 "type": "SETVOTE",
                 "data": {
-                    "voteTitle": ballot.title,
-                    "voteCount": len(ballot.votes),
-                    "voteOptions": [{"title": vo.title} for vo in ballot.voteOptions],
+                    "vote_title": ballot.title,
+                    "vote_count": len(ballot.votes),
+                    "vote_options": [{"title": vo.title} for vo in ballot.voteOptions],
                 },
             }
         )
@@ -160,9 +160,9 @@ async def show_result(id: int) -> None:
             {
                 "type": "SETRESULT",
                 "data": {
-                    "voteTitle": ballot.title,
-                    "voteCount": len(ballot.votes),
-                    "voteOptions": [
+                    "vote_title": ballot.title,
+                    "vote_count": len(ballot.votes),
+                    "vote_options": [
                         {"title": vo.title, "votes": len(vo.votes)}
                         for vo in ballot.voteOptions
                     ],
@@ -203,7 +203,7 @@ def get_registration_tokens():
         "Ihr Wahlcode",
         os.environ.get("URL"),
         [
-            (t.token, [membership.voteGroup.title for membership in t.memberships])
+            (t.token, [membership.vote_group.title for membership in t.memberships])
             for t in tokens
         ],
     )
@@ -230,13 +230,13 @@ def generate_registration_tokens(
             secret = "".join(secrets.choice(string.digits) for i in range(15))
             splitted_secret = " - ".join([secret[i : i + 5] for i in range(3)])
             token = RegistrationToken(
-                token=splitted_secret, issueDate=datetime.datetime.now()
+                token=splitted_secret, issue_date=datetime.datetime.now()
             )
             token.save()
 
             VoteGroupMembership.insert_many(
                 [
-                    {"voteGroup": vg, "registrationToken": token}
+                    {"vote_group": vg, "registration_token": token}
                     for vg in access_code_creation_data.vote_groups
                 ]
             ).execute()
@@ -276,7 +276,7 @@ async def create_ballot(ballot_data: BaseBallotData) -> int:
 
     for vo_idx, vote_option in enumerate(ballot_data.vote_options):
         option, new_created = VoteOption.get_or_create(
-            ballot=ballot.id, optionIndex=vo_idx, defaults={"title": vote_option}
+            ballot=ballot.id, option_index=vo_idx, defaults={"title": vote_option}
         )
         if not new_created:
             option.title = vote_option

@@ -63,15 +63,16 @@ def to_pydantic_ballot_data(ballot: Ballot):
     return BallotData(
         id=ballot["ballot"].id,
         title=ballot["ballot"].title,
-        maximum_votes=ballot["ballot"].maximumVotes,
-        vote_stacking=ballot["ballot"].voteStacking,
+        maximum_votes=ballot["ballot"].maximum_votes,
+        minimum_votes=ballot["ballot"].minimum_votes,
+        vote_stacking=ballot["ballot"].vote_stacking,
         vote_options=[
             VoteOptionData(
-                option_id=voteOption.id,
-                option_index=voteOption.optionIndex,
-                option_title=voteOption.title,
+                option_id=vote_option.id,
+                option_index=vote_option.option_index,
+                option_title=vote_option.title,
             )
-            for voteOption in ballot["options"]
+            for vote_option in ballot["options"]
         ],
         active=ballot["ballot"].active,
         voted=ballot["voted"],

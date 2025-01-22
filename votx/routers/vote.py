@@ -79,14 +79,14 @@ async def vote(vote: VoteData, token: VoterToken) -> tuple[bool, str]:
         return (False, "Voteoption ids do not match ballot!")
 
     # check if vote is correct
-    if len(vote.votes) > ballot.maximumVotes or len(vote.votes) < ballot.minimumVotes:
+    if len(vote.votes) > ballot.maximum_votes or len(vote.votes) < ballot.minimum_votes:
         return (
             False,
             "The number of given votes does not match the expected number of votes!",
         )
 
     # check for vote stacking
-    if len(vote.votes) != len(set(vote.votes)) and not ballot.voteStacking:
+    if len(vote.votes) != len(set(vote.votes)) and not ballot.vote_stacking:
         return (False, "Vote Stacking is not allowed!")
 
     if len(vote.custom_id) != 12:

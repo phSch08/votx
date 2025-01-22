@@ -51,7 +51,7 @@ class VoteGroup(BaseModel):
 
 class BallotVoteGroup(BaseModel):
     ballot = ForeignKeyField(Ballot, backref="votegroups")
-    votegroup = ForeignKeyField(VoteGroup, backref="ballots")
+    votegroup = ForeignKeyField(VoteGroup, backref="ballots", on_delete="CASCADE")
 
 
 class VoteGroupMembership(BaseModel):

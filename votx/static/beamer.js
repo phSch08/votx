@@ -24,9 +24,9 @@ function openWebSocket() {
         if (message.type == "SETVOTE") {
             document.getElementById("mainContainer").style.opacity = 0
             await sleep(1000)
-            setVoteCount(message.data.voteCount)
-            setVoteTitle(message.data.voteTitle, false)
-            setVoteOptions(message.data.voteOptions)
+            setVoteCount(message.data.vote_count)
+            setVoteTitle(message.data.vote_title, false)
+            setVoteOptions(message.data.vote_options)
             hideStatistics()
             document.getElementById("mainContainer").style.opacity = 1
         }
@@ -36,16 +36,16 @@ function openWebSocket() {
         }
 
         if (message.type == "SETRESULT") {
-            if (document.getElementById("voteTitle").textContent != message.data.voteTitle) {
+            if (document.getElementById("voteTitle").textContent != message.data.vote_title) {
                 document.getElementById("mainContainer").style.opacity = 0
                 await sleep(1000)
-                setVoteTitle(message.data.voteTitle, false)
-                setVoteCount(message.data.voteCount)
-                setVoteOptions(message.data.voteOptions)
+                setVoteTitle(message.data.vote_title, false)
+                setVoteCount(message.data.vote_count)
+                setVoteOptions(message.data.vote_options)
                 document.getElementById("mainContainer").style.opacity = 1
             }
-            setVoteCount(message.data.voteCount)
-            setStatistics(message.data.voteOptions)
+            setVoteCount(message.data.vote_count)
+            setStatistics(message.data.vote_options)
             showStatistics()
 
         }
@@ -144,8 +144,6 @@ function hideStatistics() {
 }
 
 function showStatistics() {
-    //document.querySelector(".gridContainer").classList.add("notransition")
     document.querySelector(".gridContainer").classList.remove("grid-hidecolumns")
     document.querySelector(".gridContainer").offsetHeight;
-    //document.querySelector(".gridContainer").classList.remove("notransition")
 }

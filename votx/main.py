@@ -63,7 +63,7 @@ async def lifespan(app: FastAPI):
     db.close()
 
 
-app = FastAPI(lifespan=lifespan, host="0.0.0.0", docs_url=None, redoc_url=None)
+app = FastAPI(lifespan=lifespan, host="0.0.0.0", docs_url="/docs", redoc_url=None)
 app.mount("/static", StaticFiles(directory="votx/static"), name="static")
 templates = Jinja2Templates(directory="votx/templates")
 
@@ -83,6 +83,16 @@ def index(request: Request, voter_token: Annotated[str | None, Cookie()] = None)
         return templates.TemplateResponse(
             request=request, name="index.jinja", context={"alert_message": ""}
         )
+
+
+@app.get("/datenschutz")
+def get_privacy(request: Request):
+    return templates.TemplateResponse(request=request, name="privacy.jinja")
+
+
+@app.get("/impressum")
+def get_imprint(request: Request):
+    return templates.TemplateResponse(request=request, name="imprint.jinja")
 
 
 @app.post("/register")
@@ -107,7 +117,7 @@ def register_voter(request: Request, registration_token: Annotated[str, Form()])
 
     # create voterToken
     voter_token = VoterToken.create(
-        token=secrets.token_hex(64), registrationToken=token
+        token=secrets.token_hex(64), registration_token=token
     )
 
     expiry_time = (

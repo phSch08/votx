@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from peewee import DoesNotExist
 
-from .dbModels import (
+from .db_models import (
     Ballot,
     BallotProtocol,
     BallotVoteGroup,
@@ -25,8 +25,8 @@ from .dbModels import (
     VoterToken,
     db,
 )
-from .exceptions.AdminUnauthorizedException import AdminUnauthorizedException
-from .exceptions.VoterUnauthorizedException import VoterUnauthorizedException
+from .exceptions.admin_unauthorized_exception import AdminUnauthorizedException
+from .exceptions.voter_unauthorized_exception import VoterUnauthorizedException
 from .models import TokenData
 from .routers import admin, beamer, vote
 from .security import (

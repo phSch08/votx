@@ -139,13 +139,13 @@
                         <fieldset class="grid">
                             <label>
                                 Minimum Votes
-                                <input type="number" name="ballot_min_votes" value="{{ selected_ballot.minimumVotes }}"
+                                <input type="number" name="ballot_min_votes" value="{{ selected_ballot.minimum_votes }}"
                                     aria-label="Number" min="1" {% if selected_ballot.active or
                                     selected_ballot.votes|length %} disabled {% endif %}>
                             </label>
                             <label>
                                 Maximum Votes
-                                <input type="number" name="ballot_max_votes" value="{{ selected_ballot.maximumVotes }}"
+                                <input type="number" name="ballot_max_votes" value="{{ selected_ballot.maximum_votes }}"
                                     aria-label="Number" min="1" {% if selected_ballot.active or
                                     selected_ballot.votes|length %} disabled {% endif %}>
                             </label>

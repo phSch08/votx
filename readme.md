@@ -1,4 +1,8 @@
 # Votick
+
+[![Linter](https://github.com/phSch08/votx/actions/workflows/check_linting.yml/badge.svg)](https://github.com/phSch08/votx/actions/workflows/check_linting.yml)
+[![Formatter](https://github.com/phSch08/votx/actions/workflows/check_formatting.yml/badge.svg)](https://github.com/phSch08/votx/actions/workflows/check_formatting.yml)
+
 Written with Python Verions 3.12
 
 

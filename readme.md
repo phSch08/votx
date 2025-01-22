@@ -30,22 +30,17 @@ $ ruff format
 ## TODOs
 
 Must Have:
-- cannot delete votegroup
 
 
 Should Have:
 
 - Websocket via TLS (wss://) sicherstellen (done, noch prüfen)
 - Check that all incoming and outgoing data is piped through pydantic
-- order vote options by option index
 - QR Code on PDF
 - Admin: generate PDF in VoteGroup card?
 - Admin: generate PDF set strings in interface
 - Deployment (done, noch prüfen)
-- Handle Error: Registration Token already used
-- Handle Error: Invalid Voter Token
-- DB access data in env
-- disable custom token in vote
+- option to disable custom token in vote
 - warning when trying to logout
 
 

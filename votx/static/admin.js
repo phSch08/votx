@@ -5,7 +5,7 @@ function generateRegistrationTokens() {
         method: "POST",
         body: JSON.stringify({
             amount: newCodes,
-            voteGroups: [...document.getElementsByName("access_code_group_checkbox")].filter(cb => cb.checked).map(cb => cb.value),
+            vote_groups: [...document.getElementsByName("access_code_group_checkbox")].filter(cb => cb.checked).map(cb => cb.value),
         }),
         headers: {
             "Content-type": "application/json; charset=UTF-8"
@@ -79,11 +79,11 @@ function createBallot() {
         method: "POST",
         body: JSON.stringify({
             title: "Neue Wahl",
-            maximumVotes: 1,
-            minimumVotes: 1,
-            voteStacking: false,
-            voteOptions: [],
-            voteGroups: [],
+            maximum_votes: 1,
+            minimum_votes: 1,
+            vote_stacking: false,
+            vote_options: [],
+            vote_groups: [],
             active: false
         }),
         headers: {
@@ -99,11 +99,11 @@ function updateBallot() {
         body: JSON.stringify({
             id: document.getElementsByName("ballot_id")[0].value,
             title: document.getElementsByName("ballot_title")[0].value,
-            maximumVotes: document.getElementsByName("ballot_max_votes")[0].value,
-            minimumVotes: document.getElementsByName("ballot_min_votes")[0].value,
-            voteStacking: document.getElementsByName("ballot_vote_stacking")[0].value == "true",
-            voteOptions: [...document.getElementsByName("ballot_vote_option")].map(option => option.value),
-            voteGroups: [...document.getElementsByName("vote_group_checkbox")].filter(cb => cb.checked).map(cb => cb.value),
+            maximum_votes: document.getElementsByName("ballot_max_votes")[0].value,
+            minimum_votes: document.getElementsByName("ballot_min_votes")[0].value,
+            vote_stacking: document.getElementsByName("ballot_vote_stacking")[0].value == "true",
+            vote_options: [...document.getElementsByName("ballot_vote_option")].map(option => option.value),
+            vote_groups: [...document.getElementsByName("vote_group_checkbox")].filter(cb => cb.checked).map(cb => cb.value),
             active: false
         }),
         headers: {

@@ -1,10 +1,14 @@
-# Votick
+# VotX
+
+[![Linter](https://github.com/phSch08/votx/actions/workflows/check_linting.yml/badge.svg)](https://github.com/phSch08/votx/actions/workflows/check_linting.yml)
+[![Formatter](https://github.com/phSch08/votx/actions/workflows/check_formatting.yml/badge.svg)](https://github.com/phSch08/votx/actions/workflows/check_formatting.yml)
+
 Written with Python Verions 3.12
 
 
 Create .env file using the provided script:
 ```
-python generateEnv.py
+python generate_env.py
 ```
 
 Start Database
@@ -14,32 +18,34 @@ docker-compose up -d
 
 Start Service
 ```
-python runVotx.py
+python run_votx.py
+```
+
+Linting/Formatting
+```(bash)
+$ ruff check [--fix | --watch]
+$ ruff format
 ```
 
 ## TODOs
 
 Must Have:
-- cannot delete votegroup
 
 
 Should Have:
 
 - Websocket via TLS (wss://) sicherstellen (done, noch prüfen)
 - Check that all incoming and outgoing data is piped through pydantic
-- order vote options by option index
-- Weblink on PDF
 - QR Code on PDF
 - Admin: generate PDF in VoteGroup card?
 - Admin: generate PDF set strings in interface
-- Multiple Votes in Frontend
-- Random Value for vote in Frontend
 - Deployment (done, noch prüfen)
-- Handle Error: Registration Token already used
-- Handle Error: Invalid Voter Token
-- DB access data in env
+- option to disable custom token in vote
+- warning when trying to logout
+
 
 Could Have:
 - Multi Language Support
 - equal name scheme
 - Tests
+- possibility to not vote

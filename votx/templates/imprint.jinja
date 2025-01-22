@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="{{ url_for('static', path='/pico.violet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/custom.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', path='/inputmask.js') }}" defer></script>
+    <title>Votix</title>
+</head>
+
+<body>
+    <header class="mainheader">
+        <nav class="container-fluid">
+            <ul>
+                <img class="mainheading" src="{{ url_for('static', path='/logo.svg') }}">
+            </ul>
+        </nav>
+    </header>
+    <main class="container">
+        <div class='impressum'>
+            <h1>Impressum</h1>
+            <hr>
+            <p><strong>Anbieter</strong><br>
+                Philipp Schmidt<br>
+                Kaiser-Friedrich Straße 16b<br>
+                14469 Potsdam<br>
+            </p>
+            <p><strong>Kontakt</strong> <br>
+                Telefon: +49 1522 5375820<br>
+                E-Mail: mail@votx.de<br></p>
+
+            <p><strong>Haftung für Inhalte</strong><br>
+                Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit
+                und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Als Diensteanbieter sind wir gemäß
+                § 7 Abs.1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§
+                8 bis 10 DDG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte
+                fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit
+                hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den
+                allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem
+                Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden
+                Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.</p><br>
+
+            <cite><small>Website Impressum erstellt durch <a
+                    href="https://www.impressum-generator.de">impressum-generator.de</a> von
+                der <a href="https://www.kanzlei-hasselbach.de/" rel="nofollow">Kanzlei Hasselbach</a></small></cite>
+        </div>
+
+    </main>
+    <footer class="container">
+        <a href="/impressum">Impressum</a>
+        <a href="/datenschutz">Datenschutzerklärung</a>
+    </footer>
+</body>

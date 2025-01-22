@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="dark">
 
 <head>
     <meta charset="utf-8">
@@ -17,6 +17,7 @@
             <ul>
                 <img class="mainheading" src="{{ url_for('static', path='/logo.svg') }}">
             </ul>
+            <a href="./logout/">Abmelden</a>
         </nav>
     </header>
     <main id="voteList" class="container">
@@ -68,22 +69,29 @@
             </label>
         </template>
     </main>
+    <footer class="container">
+            <a href="/impressum">Impressum</a>
+            <a href="/datenschutz">Datenschutzerklärung</a>
+    </footer>
     <dialog id="voteDialog">
         <article>
-        <header><strong>Wahl abgesendet</strong></header>
-        <div id="voteInProgress">
-            <p>Warte auf Bestätigung durch Server...</p>
-            <progress/>
-        </div>
-        <div id="voteFailed" hidden>
-            <p>Wahl fehlgeschlagen, bitte erneut probieren!</p>
-            <button onclick="closeModal()">Schließen</button>
-        </div>
-        <div id="voteSuccessfull" hidden>
-            <p>Wahlvorgang Erfolgreich!</p>
-            <button onclick="closeModal()">Schließen</button>
-        </div>
-    </article>
+            <header><strong>Wahl abgesendet</strong></header>
+            <div id="voteInProgress">
+                <p>Warte auf Bestätigung durch Server...</p>
+                <progress />
+            </div>
+            <div id="voteFailed" hidden>
+                <p>Wahl fehlgeschlagen, bitte erneut probieren!</p>
+                <button onclick="closeModal()">Schließen</button>
+            </div>
+            <div id="voteSuccessfull" hidden>
+                <p>Wahlvorgang Erfolgreich!</p>
+                <p>Durch tippen auf das folgende Feld kann wird ein Code angezeigt. Dieser kann notiert werden um im
+                    Nachgang der Wahl die korrekte Verbuchung der abgegebenen Stimme zu prüfen.</p>
+                <input id="voteSecret" type="password" value="geheim" onclick="toggleVoteSecretVisibility()" readonly>
+                <button onclick="closeModal()">Schließen</button>
+            </div>
+        </article>
     </dialog>
 </body>
 

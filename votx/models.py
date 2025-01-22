@@ -3,58 +3,59 @@ from pydantic import BaseModel
 
 class RegistrationTokenCreationData(BaseModel):
     amount: int
-    voteGroups: list[int]
+    vote_groups: list[int]
 
 
 class VoteOptionData(BaseModel):
-    optionId: int
-    optionIndex: int
-    optionTitle: str
+    option_id: int
+    option_index: int
+    option_title: str
 
 
 class BaseBallotData(BaseModel):
     id: None | int = None
     title: str
-    maximumVotes: int = 1
-    minimumVotes: int = 1
-    voteStacking: bool
-    voteOptions: list[str]
-    voteGroups: list[int]
+    maximum_votes: int = 1
+    minimum_votes: int = 1
+    vote_stacking: bool
+    vote_options: list[str]
+    vote_groups: list[int]
     active: bool
 
 
 class BallotData(BaseModel):
     id: int
     title: str
-    maximumVotes: int = 1
-    minimumVotes: int = 1
-    voteStacking: bool
-    voteOptions: list[VoteOptionData]
+    maximum_votes: int = 1
+    minimum_votes: int = 1
+    vote_stacking: bool
+    vote_options: list[VoteOptionData]
     active: bool
     voted: bool
 
 
 class VoteData(BaseModel):
-    ballotId: int
+    ballot_id: int
     votes: list[int]
+    custom_id: str
 
 
 class TokenData(BaseModel):
     access_token: str
     token_type: str
-    
+
 
 class VoteGroupCreationData(BaseModel):
     title: str
-    
+
 
 class VoteGroupDeletionData(BaseModel):
     id: int
-    
+
 
 class BeamerTextData(BaseModel):
     text: str
-    
+
 
 class RegistrationTokenResetData(BaseModel):
     token: str

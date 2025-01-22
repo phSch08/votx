@@ -78,3 +78,32 @@ input[type=button]{
 dialog button {
     width: 100%;
 }
+
+#voteSecret {
+    text-align: center;
+    letter-spacing: 1em;
+}
+
+article.alert {
+    background-color: #70000030;
+    border: solid 1px #700000FF;
+}
+
+footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    a {
+        margin-left: 10px;
+        margin-right: 10px;
+        font-size: .75em;
+        color: var(--pico-muted-color);
+        text-decoration-color: var(--pico-muted-color);
+    }
+    
+    a:hover {
+        color: var(--pico-primary);
+        text-decoration-color: var(--pico-primary);
+    }
+}

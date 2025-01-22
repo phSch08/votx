@@ -4,10 +4,9 @@ services:
     container_name: votix_db
     ports:
       - 127.0.0.1:5432:5432
-    environment:
-      - POSTGRES_PASSWORD=mysecretpassword
-      - POSTGRES_USER=votix
-      - POSTGRES_DB=votix
+    env_file:
+      - path: "./db.env"
+        required: true
 
   pgadmin:
     image: dpage/pgadmin4

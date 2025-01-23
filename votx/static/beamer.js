@@ -38,9 +38,9 @@ function openWebSocket() {
         if (message.type == "SETVOTE") {
             document.getElementById("mainContainer").style.opacity = 0
             await sleep(1000)
-            setVoteCount(message.data.vote_count)
             setVoteTitle(message.data.vote_title, false)
             setVoteOptions(message.data.vote_options)
+            setVoteCount(message.data.vote_count)
             hideStatistics()
             document.getElementById("mainContainer").style.opacity = 1
         }

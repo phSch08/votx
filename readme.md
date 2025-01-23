@@ -42,6 +42,8 @@ Should Have:
 - Deployment (done, noch prüfen)
 - option to disable custom token in vote
 - warning when trying to logout
+- Beamer view with long strings looks bad
+- PDF view with long answers looks bad
 
 
 Could Have:

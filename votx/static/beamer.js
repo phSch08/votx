@@ -17,6 +17,20 @@ function openWebSocket() {
     ws_location += loc.host + loc.pathname + "ws";
 
     ws = new WebSocket(ws_location);
+
+    ws.onclose = function (event) {
+        console.log("Websocket closed, trying to reconnect in 10 seconds.")
+        console.log(event.reason)
+        setTimeout(function () {
+            openWebSocket()
+        }, 10000);
+    }
+
+    ws.onerror = function (err) {
+        console.error('Websocket error: ', err.message, 'Closing socket');
+        ws.close();
+    };
+
     ws.onmessage = async function (event) {
         const message = JSON.parse(event.data)
         console.log(message)

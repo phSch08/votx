@@ -7,8 +7,12 @@
     <meta name="color-scheme" content="light dark" />
     <link rel="stylesheet" href="{{ url_for('static', path='/pico.violet.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='/custom.css') }}">
+    <script type="text/javascript">
+        const initialBallots = JSON.parse('{{ initial_ballots | tojson }}')
+    </script>
     <script type="text/javascript" src="{{ url_for('static', path='/custom.js') }}" defer></script>
     <title>Votix</title>
+    
 </head>
 
 <body>
@@ -23,8 +27,6 @@
     <main id="voteList" class="container">
 
         <h2>Wahlgänge</h2>
-
-
         <template id="voteCardTemplate">
             <div id="voteCardTemplateDiv" class="voteCard">
                 <div class="voteCardTitle" onclick="toggleCard(this.parentElement.id)">-

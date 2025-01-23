@@ -50,16 +50,19 @@ def get_user_ballots(voter_token: str) -> list:
             ballots[row.id] = {"ballot": row, "voted": row.has_user_vote, "options": []}
         ballots[row.id]["options"].append(row.voteoption)
 
-    return list(map(to_dict_ballot_data, ballots.values()))
+    return ballots.values()
 
 
 async def broadcast_user_ballots():
     await socket_manager.broadcast_func(
-        lambda voter_token: {"type": "BALLOTS", "data": get_user_ballots(voter_token)}
+        lambda voter_token: {
+            "type": "BALLOTS",
+            "data": list(map(to_dict_ballot_data, get_user_ballots(voter_token))),
+        }
     )
 
 
-def to_pydantic_ballot_data(ballot: Ballot):
+def to_pydantic_ballot_data(ballot: Ballot) -> BallotData:
     return BallotData(
         id=ballot["ballot"].id,
         title=ballot["ballot"].title,

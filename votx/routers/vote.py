@@ -17,8 +17,14 @@ from fastapi.templating import Jinja2Templates
 from peewee import DoesNotExist
 
 from ..db_models import Ballot, UserVote, Vote, VoteOption, VoterToken, db
-from ..helpers.data import get_user_ballots, socket_manager, update_beamer_vote_count
-from ..models import VoteData
+from ..helpers.data import (
+    get_user_ballots,
+    socket_manager,
+    to_dict_ballot_data,
+    to_pydantic_ballot_data,
+    update_beamer_vote_count,
+)
+from ..models import VoteData, VoteResultData
 from ..security import get_voter_token_from_jwt
 
 templates = Jinja2Templates(directory="votx/templates")
@@ -37,13 +43,21 @@ def vote_screen(
     request: Request, voter_token: Annotated[str, Depends(get_voter_token_from_jwt)]
 ):
     try:
-        VoterToken.get(VoterToken.token == voter_token)
+        voter_token = VoterToken.get(VoterToken.token == voter_token)
     except DoesNotExist:
         response = RedirectResponse(url="/")
         response.delete_cookie("voter_token")
         return response
 
-    return templates.TemplateResponse(request=request, name="vote.jinja")
+    return templates.TemplateResponse(
+        request=request,
+        name="vote.jinja",
+        context={
+            "initial_ballots": list(
+                map(to_dict_ballot_data, get_user_ballots(voter_token.token))
+            )
+        },
+    )
 
 
 @router.get("/logout")
@@ -53,15 +67,22 @@ async def logout(response: Response):
     return response
 
 
-async def vote(vote: VoteData, token: VoterToken) -> tuple[bool, str]:
+@router.post("/submit")
+async def vote(
+    vote: VoteData, token: Annotated[str, Depends(get_voter_token_from_jwt)]
+) -> VoteResultData:
     try:
         ballot = Ballot.get_by_id(vote.ballot_id)
-        registration_token = token.registration_token
+        registration_token = VoterToken.get(
+            VoterToken.token == token
+        ).registration_token
     except DoesNotExist:
-        return (False, "Ballot does not exist!")
+        # ballot does not exist
+        return VoteResultData(success=False, ballots=None)
 
     if not ballot.active:
-        return (False, "Ballot is not active!")
+        # ballot is not active
+        return VoteResultData(success=False, ballots=None)
 
     # check if vote is possible
     if (
@@ -69,28 +90,30 @@ async def vote(vote: VoteData, token: VoterToken) -> tuple[bool, str]:
         .where((UserVote.voter == registration_token) & (UserVote.ballot == ballot))
         .exists()
     ):
-        return (False, "Already voted for this ballot!")
+        # already voted for this ballot
+        return VoteResultData(success=False, ballots=None)
 
     # Check if VoteOption Ids match with ballot
     if not (
         set(vote.votes)
         <= set(map(lambda vote_option: vote_option.id, ballot.voteOptions))
     ):
-        return (False, "Voteoption ids do not match ballot!")
+        # Voteoption ids do not match ballot!
+        return VoteResultData(success=False, ballots=None)
 
     # check if vote is correct
     if len(vote.votes) > ballot.maximum_votes or len(vote.votes) < ballot.minimum_votes:
-        return (
-            False,
-            "The number of given votes does not match the expected number of votes!",
-        )
+        # The number of given votes does not match the expected number of votes
+        return VoteResultData(success=False, ballots=None)
 
     # check for vote stacking
     if len(vote.votes) != len(set(vote.votes)) and not ballot.vote_stacking:
-        return (False, "Vote Stacking is not allowed!")
+        # Vote Stacking is not allowed
+        return VoteResultData(success=False, ballots=None)
 
     if len(vote.custom_id) != 12:
-        return (False, "The custom ID must consist of exactly 12 characters")
+        # The custom ID must consist of exactly 12 characters
+        return VoteResultData(success=False, ballots=None)
 
     # perform vote and mark as voted
     try:
@@ -102,10 +125,14 @@ async def vote(vote: VoteData, token: VoterToken) -> tuple[bool, str]:
                 )
             UserVote.create(voter=registration_token, ballot=ballot)
     except Exception:
-        return (False, "Failure while Voting!")
+        # other failure during vote
+        return VoteResultData(success=False, ballots=None)
 
     await update_beamer_vote_count(ballot)
-    return (True, "Vote Successful")
+    return VoteResultData(
+        success=True,
+        ballots=list(map(to_pydantic_ballot_data, get_user_ballots(token))),
+    )
 
 
 @router.websocket("/ws")
@@ -122,25 +149,18 @@ async def websocket_endpoint(
     await socket_manager.connect_voter(websocket, token.token)
 
     try:
-        await websocket.send_json({"type": "AUTHENTICATED"})
-
         while True:
             try:
                 message = await websocket.receive_json()
 
                 if message["type"] == "GETBALLOTS":
                     await websocket.send_json(
-                        {"type": "BALLOTS", "data": get_user_ballots(voter_token)}
-                    )
-
-                if message["type"] == "VOTE":
-                    vote_data = VoteData.model_validate(message["data"])
-                    vote_result = await vote(vote_data, token)
-                    await websocket.send_json(
-                        {"type": "VOTERESULT", "data": {"success": vote_result[0]}}
-                    )
-                    await websocket.send_json(
-                        {"type": "BALLOTS", "data": get_user_ballots(voter_token)}
+                        {
+                            "type": "BALLOTS",
+                            "data": list(
+                                map(to_dict_ballot_data, get_user_ballots(voter_token))
+                            ),
+                        }
                     )
 
             except (json.JSONDecodeError, KeyError):

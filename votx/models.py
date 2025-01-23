@@ -40,6 +40,11 @@ class VoteData(BaseModel):
     custom_id: str
 
 
+class VoteResultData(BaseModel):
+    success: bool
+    ballots: list[BallotData] | None
+
+
 class TokenData(BaseModel):
     access_token: str
     token_type: str

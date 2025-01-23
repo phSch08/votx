@@ -8,10 +8,11 @@ let ballots = {}
 
 document.addEventListener("DOMContentLoaded", function () {
     voteCards = document.getElementsByClassName("voteCard")
+    updateBallots(initialBallots)
     openWebSocket()
 })
 
-function openWebSocket() {
+function openWebSocket(reconnect = false) {
     let socketProtocol = "wss://"
     if (window.location.protocol === 'http:') {
         socketProtocol = "ws://"
@@ -24,22 +25,26 @@ function openWebSocket() {
         if (message.type == "BALLOTS") {
             updateBallots(message.data)
         }
+    };
 
-        if (message.type == "AUTHENTICATED") {
-            sendMessage(`{"type": "GETBALLOTS"}`)
-        }
+    ws.onopen = function () {
+        if (reconnect) {
+            console.log("Websocket reestablished...")
+            ws.send(`{"type": "GETBALLOTS"}`)
+        } 
+    }
 
-        if (message.type == "VOTERESULT") {
-            if (message.data.success) {
-                document.getElementById("voteInProgress").hidden = true
-                document.getElementById("voteSuccessfull").hidden = false
-                document.getElementById("voteFailed").hidden = true
-            } else {
-                document.getElementById("voteInProgress").hidden = true
-                document.getElementById("voteSuccessfull").hidden = true
-                document.getElementById("voteFailed").hidden = false
-            }
-        }
+    ws.onclose = function (event) {
+        console.log("Websocket closed, trying to reconnect in 20 seconds.")
+        console.log(event.reason)
+        setTimeout(function () {
+            openWebSocket(true)
+        }, 20000);
+    }
+
+    ws.onerror = function (err) {
+        console.error('Websocket error: ', err.message, 'Closing socket');
+        ws.close();
     };
 
 }
@@ -60,11 +65,6 @@ function closeModal() {
 
 }
 
-function sendMessage(content) {
-    console.log(content)
-    ws.send(content)
-}
-
 function vote(content) {
     const custom_id = window.crypto.randomUUID().split("-").at(-1).toUpperCase()
     const modal = document.getElementById("voteDialog")
@@ -77,17 +77,36 @@ function vote(content) {
     }, 400);
     modal.showModal()
 
-    sendMessage(JSON.stringify({
-        type: 'VOTE',
-        data: {
+    fetch("submit/", {
+        method: "POST",
+        body: JSON.stringify({
             ballot_id: +content.querySelector(".formVoteId").value,
             votes: [...document.querySelectorAll(
                 ".voteOptions input[type=radio]:checked,\
                 .voteOptions input[type=checkbox]:checked"
             )].map(el => +el.value),
             custom_id
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
         }
-    }))
+    })
+        .then(async (res) => res.json())
+        .then((res) => {
+            if (res.ballots) {
+                updateBallots(res.ballots)
+            }
+
+            if (res.success) {
+                document.getElementById("voteInProgress").hidden = true
+                document.getElementById("voteSuccessfull").hidden = false
+                document.getElementById("voteFailed").hidden = true
+            } else {
+                document.getElementById("voteInProgress").hidden = true
+                document.getElementById("voteSuccessfull").hidden = true
+                document.getElementById("voteFailed").hidden = false
+            }
+        })
 }
 
 function toggleCard(voteCardId) {
@@ -150,7 +169,7 @@ function getVoteCard(voteId, voteTitle, voteOptions, minVotes, maxVotes, accumul
         } else {
             input.type = "checkbox"
         }
-            
+
         input.name = "vc" + vcCounter
         input.value = option.option_id
         voteOption.appendChild(input)

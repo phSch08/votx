@@ -78,10 +78,10 @@ async function setText(text) {
             await sleep(1000)
             document.getElementById("voteTitle").hidden = true
             document.getElementById("voteOptionsElement").hidden = true
+            document.getElementById("mainContainer").style.opacity = 1
             document.getElementById("voteCountElement").hidden = true
             document.getElementById("voteTitle").value = text
             document.getElementById("votxLogo").hidden = false
-            document.getElementById("mainContainer").style.opacity = 1
         }
         hideStatistics()
     } else {
@@ -91,6 +91,7 @@ async function setText(text) {
         hideStatistics()
         document.getElementById("voteOptionsElement").hidden = true
         document.getElementById("mainContainer").style.opacity = 1
+        document.getElementById("voteCountElement").hidden = true
     }
 }
 

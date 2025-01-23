@@ -81,7 +81,7 @@ function vote(content) {
         method: "POST",
         body: JSON.stringify({
             ballot_id: +content.querySelector(".formVoteId").value,
-            votes: [...document.querySelectorAll(
+            votes: [...content.querySelectorAll(
                 ".voteOptions input[type=radio]:checked,\
                 .voteOptions input[type=checkbox]:checked"
             )].map(el => +el.value),

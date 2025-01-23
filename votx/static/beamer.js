@@ -146,7 +146,9 @@ async function setVoteTitle(title, animate = true) {
 }
 
 function setVoteCount(count) {
-    document.getElementById("voteCountElement").hidden = false
+    if (!document.getElementById("voteOptionsElement").hidden){
+        document.getElementById("voteCountElement").hidden = false
+    }
     document.getElementById("voteCount").textContent = count
 }
 

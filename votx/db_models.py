@@ -42,7 +42,7 @@ class RegistrationToken(BaseModel):
 
 class VoterToken(BaseModel):
     token = CharField()
-    registration_token = ForeignKeyField(RegistrationToken, backref="voterToken")
+    registration_token = ForeignKeyField(RegistrationToken, backref="voterToken", on_delete="CASCADE")
 
 
 class VoteGroup(BaseModel):
@@ -56,7 +56,7 @@ class BallotVoteGroup(BaseModel):
 
 class VoteGroupMembership(BaseModel):
     vote_group = ForeignKeyField(VoteGroup, backref="memberships", on_delete="CASCADE")
-    registration_token = ForeignKeyField(RegistrationToken, backref="memberships")
+    registration_token = ForeignKeyField(RegistrationToken, backref="memberships", on_delete="CASCADE")
 
 
 class VoteOption(BaseModel):

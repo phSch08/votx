@@ -121,6 +121,11 @@ function toggleCard(voteCardId) {
 
 function updateBallots(ballotUpdate) {
     const ballotList = document.getElementById("voteList")
+    if (ballotUpdate.length == 0) {
+        document.getElementById("noVoteInfo").hidden = false
+    } else {
+        document.getElementById("noVoteInfo").hidden = true
+    }
     for (const ballot of ballotUpdate) {
         if (!(ballot.id in ballots)) {
             const ballotItem = getVoteCard(

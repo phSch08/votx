@@ -27,6 +27,7 @@
     <main id="voteList" class="container">
 
         <h2>Wahlgänge</h2>
+        <div id="noVoteInfo"><i>Derzeit ist kein Wahlgang aktiv...</i></div>
         <template id="voteCardTemplate">
             <div id="voteCardTemplateDiv" class="voteCard">
                 <div class="voteCardTitle" onclick="toggleCard(this.parentElement.id)">-
@@ -88,8 +89,8 @@
             </div>
             <div id="voteSuccessfull" hidden>
                 <p>Wahlvorgang Erfolgreich!</p>
-                <p>Durch tippen auf das folgende Feld kann wird ein Code angezeigt. Dieser kann notiert werden um im
-                    Nachgang der Wahl die korrekte Verbuchung der abgegebenen Stimme zu prüfen.</p>
+                <p>Durch Tippen auf das folgende Feld wird ein Code angezeigt. Dieser kann notiert werden, um im
+Nachgang der Wahl die korrekte Verbuchung der abgegebenen Stimme zu prüfen.</p>
                 <input id="voteSecret" type="password" value="geheim" onclick="toggleVoteSecretVisibility()" readonly>
                 <button onclick="closeModal()">Schließen</button>
             </div>

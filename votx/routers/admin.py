@@ -194,7 +194,7 @@ def get_ballot_protocol(id: int):
 
 @router.get("/registrationTokens/")
 def get_registration_tokens():
-    tokens = RegistrationToken.select()
+    tokens = RegistrationToken.select().join(VoteGroupMembership).distinct()
 
     pdf = generate_registration_pdf(
         "Wahlschein",

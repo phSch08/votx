@@ -3,6 +3,7 @@ import os
 
 from fastapi import (
     APIRouter,
+    Depends,
     Request,
     WebSocket,
     WebSocketDisconnect,
@@ -10,13 +11,15 @@ from fastapi import (
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from votx.security import get_logged_in_user
+
 from ..helpers.data import socket_manager
 
 templates = Jinja2Templates(directory="votx/templates")
 router = APIRouter(
     prefix="/beamer",
     tags=["beamer"],
-    dependencies=[],
+    dependencies=[Depends(get_logged_in_user)],
     responses={404: {"description": "Not found"}},
 )
 

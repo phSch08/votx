@@ -37,7 +37,10 @@
     </header>
     <main id="voteList" class="container">
         <article>
-            <header>Regie</header>
+            <header class="spreadHeader">
+                <div>Regie</div>
+                <div><a href="/beamer" target="_blank" rel="noopener noreferrer" >Beameransicht öffnen</a></div>
+            </header>
             <div class="grid">
                 <button onclick="textToBeamer()">Text</button>
                 <button {% if selected_ballot %} onclick="focusBallot({{ selected_ballot.id }})" {% else %} disabled {%

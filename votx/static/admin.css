@@ -38,3 +38,9 @@ footer {
         text-decoration-color: var(--pico-primary);
     }
 }
+
+.spreadHeader {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}

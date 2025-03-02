@@ -61,7 +61,7 @@ def get_admin(
         context={
             "user_name": user_name,
             "ballots": Ballot.select(),
-            "access_code_count": RegistrationToken.select().count(),
+            "access_code_count": RegistrationToken.select().join(VoteGroupMembership).distinct().count(),
             "selected_ballot": selected_ballot,
             "vote_groups": VoteGroup.select(
                 VoteGroup,
